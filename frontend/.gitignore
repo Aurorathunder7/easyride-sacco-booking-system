@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backend specific
+backend/node_modules/
+backend/.env
+backend/package-lock.json
+
+# Frontend specific
+frontend/node_modules/
+frontend/.env
+frontend/package-lock.json
+frontend/dist/
+
+# Generated PDFs
+backend/tickets/
+backend/receipts/
+backend/temp/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
