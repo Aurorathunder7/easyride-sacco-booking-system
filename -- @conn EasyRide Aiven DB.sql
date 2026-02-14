@@ -1,0 +1,13 @@
+-- @conn EasyRide Aiven DB
+
+CREATE TABLE IF NOT EXISTS customers (
+    custID INT AUTO_INCREMENT PRIMARY KEY,
+    customerName VARCHAR(45) NOT NULL,
+    email VARCHAR(45) NOT NULL UNIQUE,
+    dob VARCHAR(45) NOT NULL,
+    gender VARCHAR(45) NOT NULL,
+    phoneNumber VARCHAR(45) NOT NULL UNIQUE,
+    address VARCHAR(45) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

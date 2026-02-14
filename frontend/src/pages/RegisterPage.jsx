@@ -1,9 +1,31 @@
+// ============================================
+// EasyRide SACCO - Customer Registration Page
+// ============================================
+// This component handles new customer registration with form validation,
+// API integration with Aiven MySQL database, and enhanced user experience
+// ============================================
+
+// src/pages/RegisterPage.jsx
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
+// API configuration - change this to your deployed backend URL when ready
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+/**
+ * RegisterPage Component
+ * Provides a comprehensive registration form for new customers
+ * Features: Real-time validation, error handling, responsive design,
+ * loading states, and Aiven MySQL database integration
+ */
 const RegisterPage = () => {
+  // ============================
+  // STATE MANAGEMENT
+  // ============================
+  
+  /**
+   * Customer Form State - Tracks all input fields
+   */
   const [customer, setCustomer] = useState({
     customerName: '',
     email: '',
@@ -35,6 +57,9 @@ const RegisterPage = () => {
    */
   const navigate = useNavigate()
 
+  // ============================
+  // EVENT HANDLERS
+  // ============================
 
   /**
    * Handles input changes and updates form state
@@ -57,7 +82,7 @@ const RegisterPage = () => {
 
   /**
    * Validates all form fields before submission
-   * @returns {Object}
+   * @returns {Object} Validation errors object (empty if valid)
    */
   const validateForm = () => {
     const newErrors = {}
@@ -147,6 +172,7 @@ const RegisterPage = () => {
 
   /**
    * Handles form submission
+   * Validates input, attempts registration, and handles response
    */
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -155,6 +181,11 @@ const RegisterPage = () => {
     const formErrors = validateForm()
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors)
+      // Scroll to first error
+      const firstErrorField = document.querySelector('[class*="border-red-500"]')
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
       return
     }
 
@@ -174,12 +205,12 @@ const RegisterPage = () => {
         password: customer.password
       }
 
-      console.log('📝 Sending registration data:', { 
+      console.log('📝 Sending registration data to Aiven MySQL:', { 
         ...registrationData, 
         password: '[HIDDEN]' 
       })
 
-      // 🔴 BACKEND API CALL
+      // 🔴 BACKEND API CALL - Connects to your Node.js server which then saves to Aiven MySQL
       const response = await fetch(`${API_BASE_URL}/auth/register/customer`, {
         method: 'POST',
         headers: {
@@ -206,13 +237,13 @@ const RegisterPage = () => {
       }
 
       // Registration successful!
-      console.log('✅ Registration successful:', data)
+      console.log('✅ Registration successful! Customer saved to Aiven MySQL:', data)
       
       // Store registration email for login page pre-fill (optional)
       localStorage.setItem('registeredEmail', registrationData.email)
       
       // Show success message
-      alert('✅ Registration successful! Please check your email for verification (if required) and login with your credentials.')
+      alert('✅ Registration successful! Please login with your credentials.')
       
       // Redirect to login page
       navigate('/login')
@@ -237,16 +268,21 @@ const RegisterPage = () => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden transform transition-all hover:scale-[1.01] duration-300">
         <div className="md:flex">
           
+          {/* ============================ */}
           {/* LEFT SIDE - BRANDING SECTION */}
+          {/* ============================ */}
           <div className="md:w-1/2 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-8 md:p-12 relative overflow-hidden">
+            {/* Decorative background elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500 opacity-20 rounded-full -ml-10 -mb-10"></div>
             
+            {/* Company branding */}
             <div className="relative z-10 mb-8">
               <h1 className="text-4xl font-bold mb-2 tracking-tight">EasyRide SACCO</h1>
               <p className="text-blue-100 text-lg">✨ Matatu Booking System</p>
             </div>
             
+            {/* Benefits section */}
             <div className="relative z-10 mt-12">
               <h2 className="text-2xl font-semibold mb-6">🌟 Why Join Us?</h2>
               <ul className="space-y-4">
@@ -269,6 +305,7 @@ const RegisterPage = () => {
               </ul>
             </div>
             
+            {/* Call to action for existing users */}
             <div className="relative z-10 mt-12 bg-blue-500 bg-opacity-30 rounded-lg p-4 backdrop-blur-sm">
               <p className="text-blue-100">Already have an account?</p>
               <Link 
@@ -280,7 +317,9 @@ const RegisterPage = () => {
             </div>
           </div>
           
+          {/* ============================ */}
           {/* RIGHT SIDE - REGISTRATION FORM */}
+          {/* ============================ */}
           <div className="md:w-1/2 p-8 md:p-12 bg-white">
             <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
             <p className="text-gray-500 mb-6">Join our community of satisfied travelers</p>
