@@ -211,7 +211,7 @@ const RegisterPage = () => {
       })
 
       // 🔴 BACKEND API CALL - Connects to your Node.js server which then saves to Aiven MySQL
-      const response = await fetch(`${API_BASE_URL}/auth/register/customer`, {
+      const response = await fetch(`${API_BASE_URL}/register`,  {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
