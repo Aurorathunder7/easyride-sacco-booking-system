@@ -210,11 +210,12 @@ const RegisterPage = () => {
         password: '[HIDDEN]' 
       })
 
-      // 🔴 BACKEND API CALL - Connects to your Node.js server which then saves to Aiven MySQL
-      const response = await fetch(`${API_BASE_URL}/register`,  {
+      // 🔴 BACKEND API CALL - UPDATED: changed from '/register' to '/auth/register'
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true' // Added to bypass ngrok warning
         },
         body: JSON.stringify(registrationData),
       })
@@ -264,53 +265,125 @@ const RegisterPage = () => {
   // ============================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden transform transition-all hover:scale-[1.01] duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white opacity-5 rounded-full animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white opacity-5 rounded-full animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-500 to-purple-500 opacity-10 rounded-full blur-3xl animate-pulse"></div>
+      </div>
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 5}s`
+            }}
+          ></div>
+        ))}
+      </div>
+
+      {/* Main Card Container */}
+      <div className="relative z-10 bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-white/20 transform transition-all duration-500 hover:scale-[1.02] hover:shadow-3xl">
         <div className="md:flex">
           
           {/* ============================ */}
           {/* LEFT SIDE - BRANDING SECTION */}
           {/* ============================ */}
-          <div className="md:w-1/2 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-8 md:p-12 relative overflow-hidden">
-            {/* Decorative background elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500 opacity-20 rounded-full -ml-10 -mb-10"></div>
+          <div className="md:w-1/2 bg-gradient-to-br from-blue-600/90 to-purple-600/90 text-white p-8 md:p-12 relative overflow-hidden backdrop-blur-sm">
+            {/* Animated gradient overlays */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
+            
+            {/* Decorative circles */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full animate-blob"></div>
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/20 rounded-full animate-blob animation-delay-2000"></div>
             
             {/* Company branding */}
-            <div className="relative z-10 mb-8">
-              <h1 className="text-4xl font-bold mb-2 tracking-tight">EasyRide SACCO</h1>
-              <p className="text-blue-100 text-lg">✨ Matatu Booking System</p>
+            <div className="relative z-10 mb-8 transform transition-all duration-700 hover:scale-105">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm animate-bounce-slow">
+                  <span className="text-4xl">🚌</span>
+                </div>
+              </div>
+              <h1 className="text-4xl font-bold mb-2 tracking-tight text-center bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                EasyRide SACCO
+              </h1>
+              <p className="text-blue-100 text-lg text-center animate-pulse">✨ Matatu Booking System</p>
             </div>
             
-            {/* Benefits section */}
-            <div className="relative z-10 mt-12">
-              <h2 className="text-2xl font-semibold mb-6">🌟 Why Join Us?</h2>
-              <ul className="space-y-4">
-                <li className="flex items-center transform transition-all hover:translate-x-2 duration-200">
-                  <span className="mr-3 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center text-sm">✓</span>
-                  <span>Book seats from anywhere, anytime</span>
-                </li>
-                <li className="flex items-center transform transition-all hover:translate-x-2 duration-200">
-                  <span className="mr-3 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center text-sm">✓</span>
-                  <span>Secure M-Pesa payments & digital receipts</span>
-                </li>
-                <li className="flex items-center transform transition-all hover:translate-x-2 duration-200">
-                  <span className="mr-3 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center text-sm">✓</span>
-                  <span>Digital tickets with QR codes</span>
-                </li>
-                <li className="flex items-center transform transition-all hover:translate-x-2 duration-200">
-                  <span className="mr-3 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center text-sm">✓</span>
-                  <span>Track booking history & favorite routes</span>
-                </li>
-              </ul>
+            {/* Welcome message */}
+            <div className="relative z-10 mb-8 text-center">
+              <p className="text-white/90 text-lg font-light">
+                Join thousands of happy travelers
+              </p>
+            </div>
+            
+            {/* Benefits section with animated cards */}
+            <div className="relative z-10 mt-8">
+              <h2 className="text-2xl font-semibold mb-6 text-center">🌟 Why Join Us?</h2>
+              <div className="space-y-4">
+                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-green-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                      <span className="text-green-400 text-xl">✓</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Book Anywhere</h3>
+                      <p className="text-sm text-white/70">From your phone or computer</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-blue-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                      <span className="text-blue-400 text-xl">💰</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">M-Pesa Payments</h3>
+                      <p className="text-sm text-white/70">Secure & instant transactions</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-purple-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                      <span className="text-purple-400 text-xl">🎫</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Digital Tickets</h3>
+                      <p className="text-sm text-white/70">QR codes for easy boarding</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-pink-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                      <span className="text-pink-400 text-xl">📊</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Track History</h3>
+                      <p className="text-sm text-white/70">View all your past trips</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Call to action for existing users */}
-            <div className="relative z-10 mt-12 bg-blue-500 bg-opacity-30 rounded-lg p-4 backdrop-blur-sm">
-              <p className="text-blue-100">Already have an account?</p>
+            <div className="relative z-10 mt-8 bg-gradient-to-r from-white/20 to-purple-500/20 rounded-xl p-6 backdrop-blur-sm border border-white/20 transform transition-all duration-300 hover:scale-105">
+              <p className="text-white/90 text-center mb-2">Already have an account?</p>
               <Link 
                 to="/login" 
-                className="text-white font-semibold underline hover:text-blue-200 transition-colors duration-200 inline-block mt-1"
+                className="block text-center bg-white text-purple-600 font-semibold py-3 px-6 rounded-lg hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
               >
                 🔑 Login to your account →
               </Link>
@@ -320,62 +393,72 @@ const RegisterPage = () => {
           {/* ============================ */}
           {/* RIGHT SIDE - REGISTRATION FORM */}
           {/* ============================ */}
-          <div className="md:w-1/2 p-8 md:p-12 bg-white">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
-            <p className="text-gray-500 mb-6">Join our community of satisfied travelers</p>
+          <div className="md:w-1/2 p-8 md:p-12 bg-white/95 backdrop-blur-xl">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                Create Account
+              </h2>
+              <p className="text-gray-600">Join our community of satisfied travelers</p>
+            </div>
             
             {/* Server Error Display */}
             {serverError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg animate-pulse">
-                <p className="text-red-600 flex items-start">
-                  <span className="mr-2 text-lg">⚠️</span>
-                  <span className="font-medium">{serverError}</span>
-                </p>
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">⚠️</span>
+                  <p className="text-red-700 font-medium">{serverError}</p>
+                </div>
               </div>
             )}
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Row 1: Full Name & Email */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     👤 Full Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="customerName"
-                    value={customer.customerName}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.customerName ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="John Doe"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="customerName"
+                      value={customer.customerName}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.customerName ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                      placeholder="John Doe"
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">👤</span>
+                  </div>
                   {errors.customerName && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.customerName}
                     </p>
                   )}
                 </div>
                 
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     📧 Email <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={customer.email}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="john@example.com"
-                  />
+                  <div className="relative">
+                    <input
+                      type="email"
+                      name="email"
+                      value={customer.email}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                      placeholder="john@example.com"
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">📧</span>
+                  </div>
                   {errors.email && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.email}
                     </p>
                   )}
@@ -385,47 +468,54 @@ const RegisterPage = () => {
               {/* Row 2: Date of Birth & Gender */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     📅 Date of Birth <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    name="dob"
-                    value={customer.dob}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    max={new Date().toISOString().split('T')[0]}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.dob ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      name="dob"
+                      value={customer.dob}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      max={new Date().toISOString().split('T')[0]}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.dob ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">📅</span>
+                  </div>
                   {errors.dob && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.dob}
                     </p>
                   )}
                 </div>
                 
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     ⚥ Gender <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    name="gender"
-                    value={customer.gender}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.gender ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">👨 Male</option>
-                    <option value="Female">👩 Female</option>
-                    <option value="Other">🧑 Other</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="gender"
+                      value={customer.gender}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 appearance-none ${
+                        errors.gender ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">👨 Male</option>
+                      <option value="Female">👩 Female</option>
+                      <option value="Other">🧑 Other</option>
+                    </select>
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">⚥</span>
+                    <span className="absolute right-3 top-3 text-gray-400">▼</span>
+                  </div>
                   {errors.gender && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.gender}
                     </p>
                   )}
@@ -435,22 +525,25 @@ const RegisterPage = () => {
               {/* Row 3: Phone Number & Address */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     📱 Phone Number <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={customer.phoneNumber}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="0712345678"
-                  />
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={customer.phoneNumber}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.phoneNumber ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                      placeholder="0712345678"
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">📱</span>
+                  </div>
                   {errors.phoneNumber && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.phoneNumber}
                     </p>
                   )}
@@ -458,22 +551,25 @@ const RegisterPage = () => {
                 </div>
                 
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     🏠 Address <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={customer.address}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="Nairobi, Kenya"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="address"
+                      value={customer.address}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.address ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                      placeholder="Nairobi, Kenya"
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">🏠</span>
+                  </div>
                   {errors.address && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.address}
                     </p>
                   )}
@@ -483,60 +579,74 @@ const RegisterPage = () => {
               {/* Row 4: Password & Confirm Password */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     🔒 Password <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={customer.password}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="Min. 6 characters with letters and numbers"
-                  />
+                  <div className="relative">
+                    <input
+                      type="password"
+                      name="password"
+                      value={customer.password}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                      placeholder="Min. 6 characters with letters and numbers"
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">🔒</span>
+                  </div>
                   {errors.password && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.password}
                     </p>
                   )}
                 </div>
                 
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 group-hover:text-blue-600 transition-colors">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
                     ✓ Confirm Password <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={customer.confirmPassword}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-blue-400'
-                    } ${isLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="Re-enter password"
-                  />
+                  <div className="relative">
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={customer.confirmPassword}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
+                        errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
+                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                      placeholder="Re-enter password"
+                    />
+                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">✓</span>
+                  </div>
                   {errors.confirmPassword && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
                       <span className="mr-1">⚠️</span> {errors.confirmPassword}
                     </p>
                   )}
                 </div>
               </div>
               
+              {/* Terms and Conditions */}
+              <div className="flex items-center mt-4">
+                <input type="checkbox" className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" />
+                <label className="ml-2 text-sm text-gray-600">
+                  I agree to the <a href="#" className="text-purple-600 hover:underline">Terms of Service</a> and <a href="#" className="text-purple-600 hover:underline">Privacy Policy</a>
+                </label>
+              </div>
+              
               {/* Submit Button */}
-              <div className="pt-6">
+              <div className="pt-4">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold 
-                    transform transition-all duration-300 hover:shadow-xl focus:ring-4 focus:ring-blue-300
+                  className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg
+                    transform transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-[1.02] focus:ring-4 focus:ring-purple-300
                     ${isLoading 
-                      ? 'opacity-75 cursor-not-allowed from-blue-400 to-blue-500' 
-                      : 'hover:from-blue-700 hover:to-blue-800 hover:scale-[1.02]'
+                      ? 'opacity-75 cursor-not-allowed from-purple-400 to-blue-400' 
+                      : 'hover:from-purple-700 hover:to-blue-700 active:scale-95'
                     }`}
                 >
                   {isLoading ? (
@@ -548,14 +658,16 @@ const RegisterPage = () => {
                       Creating Account...
                     </span>
                   ) : (
-                    '🚀 Create Account'
+                    <span className="flex items-center justify-center">
+                      🚀 Create Account
+                    </span>
                   )}
                 </button>
               </div>
             </form>
             
             {/* Important Note */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+            <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
               <p className="text-sm text-yellow-800 flex items-start">
                 <span className="mr-2 text-lg">📌</span>
                 <span>
@@ -567,6 +679,59 @@ const RegisterPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Add custom animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .hover\:shadow-3xl:hover {
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+      `}</style>
     </div>
   )
 }
