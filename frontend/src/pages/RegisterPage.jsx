@@ -210,12 +210,12 @@ const RegisterPage = () => {
         password: '[HIDDEN]' 
       })
 
-      // 🔴 BACKEND API CALL - UPDATED: changed from '/register' to '/auth/register'
+      // 🔴 BACKEND API CALL
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true' // Added to bypass ngrok warning
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify(registrationData),
       })
@@ -265,475 +265,463 @@ const RegisterPage = () => {
   // ============================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white opacity-5 rounded-full animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white opacity-5 rounded-full animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-500 to-purple-500 opacity-10 rounded-full blur-3xl animate-pulse"></div>
-      </div>
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${5 + Math.random() * 5}s`
-            }}
-          ></div>
-        ))}
-      </div>
-
-      {/* Main Card Container */}
-      <div className="relative z-10 bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-white/20 transform transition-all duration-500 hover:scale-[1.02] hover:shadow-3xl">
-        <div className="md:flex">
-          
-          {/* ============================ */}
-          {/* LEFT SIDE - BRANDING SECTION */}
-          {/* ============================ */}
-          <div className="md:w-1/2 bg-gradient-to-br from-blue-600/90 to-purple-600/90 text-white p-8 md:p-12 relative overflow-hidden backdrop-blur-sm">
-            {/* Animated gradient overlays */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
-            
-            {/* Decorative circles */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full animate-blob"></div>
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/20 rounded-full animate-blob animation-delay-2000"></div>
-            
-            {/* Company branding */}
-            <div className="relative z-10 mb-8 transform transition-all duration-700 hover:scale-105">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm animate-bounce-slow">
-                  <span className="text-4xl">🚌</span>
-                </div>
-              </div>
-              <h1 className="text-4xl font-bold mb-2 tracking-tight text-center bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                EasyRide SACCO
-              </h1>
-              <p className="text-blue-100 text-lg text-center animate-pulse">✨ Matatu Booking System</p>
-            </div>
-            
-            {/* Welcome message */}
-            <div className="relative z-10 mb-8 text-center">
-              <p className="text-white/90 text-lg font-light">
-                Join thousands of happy travelers
-              </p>
-            </div>
-            
-            {/* Benefits section with animated cards */}
-            <div className="relative z-10 mt-8">
-              <h2 className="text-2xl font-semibold mb-6 text-center">🌟 Why Join Us?</h2>
-              <div className="space-y-4">
-                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-green-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
-                      <span className="text-green-400 text-xl">✓</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Book Anywhere</h3>
-                      <p className="text-sm text-white/70">From your phone or computer</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-blue-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
-                      <span className="text-blue-400 text-xl">💰</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">M-Pesa Payments</h3>
-                      <p className="text-sm text-white/70">Secure & instant transactions</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-purple-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
-                      <span className="text-purple-400 text-xl">🎫</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Digital Tickets</h3>
-                      <p className="text-sm text-white/70">QR codes for easy boarding</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="group bg-white/5 rounded-xl p-4 backdrop-blur-sm transform transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:shadow-xl">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-pink-400/20 rounded-full flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
-                      <span className="text-pink-400 text-xl">📊</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Track History</h3>
-                      <p className="text-sm text-white/70">View all your past trips</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Call to action for existing users */}
-            <div className="relative z-10 mt-8 bg-gradient-to-r from-white/20 to-purple-500/20 rounded-xl p-6 backdrop-blur-sm border border-white/20 transform transition-all duration-300 hover:scale-105">
-              <p className="text-white/90 text-center mb-2">Already have an account?</p>
-              <Link 
-                to="/login" 
-                className="block text-center bg-white text-purple-600 font-semibold py-3 px-6 rounded-lg hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-              >
-                🔑 Login to your account →
-              </Link>
-            </div>
-          </div>
-          
-          {/* ============================ */}
-          {/* RIGHT SIDE - REGISTRATION FORM */}
-          {/* ============================ */}
-          <div className="md:w-1/2 p-8 md:p-12 bg-white/95 backdrop-blur-xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                Create Account
-              </h2>
-              <p className="text-gray-600">Join our community of satisfied travelers</p>
-            </div>
-            
-            {/* Server Error Display */}
-            {serverError && (
-              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">⚠️</span>
-                  <p className="text-red-700 font-medium">{serverError}</p>
-                </div>
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Row 1: Full Name & Email */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    👤 Full Name <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="customerName"
-                      value={customer.customerName}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.customerName ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                      placeholder="John Doe"
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">👤</span>
-                  </div>
-                  {errors.customerName && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.customerName}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    📧 Email <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      name="email"
-                      value={customer.email}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                      placeholder="john@example.com"
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">📧</span>
-                  </div>
-                  {errors.email && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.email}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Row 2: Date of Birth & Gender */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    📅 Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="dob"
-                      value={customer.dob}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      max={new Date().toISOString().split('T')[0]}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.dob ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">📅</span>
-                  </div>
-                  {errors.dob && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.dob}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    ⚥ Gender <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="gender"
-                      value={customer.gender}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 appearance-none ${
-                        errors.gender ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">👨 Male</option>
-                      <option value="Female">👩 Female</option>
-                      <option value="Other">🧑 Other</option>
-                    </select>
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">⚥</span>
-                    <span className="absolute right-3 top-3 text-gray-400">▼</span>
-                  </div>
-                  {errors.gender && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.gender}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Row 3: Phone Number & Address */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    📱 Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={customer.phoneNumber}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.phoneNumber ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                      placeholder="0712345678"
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">📱</span>
-                  </div>
-                  {errors.phoneNumber && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.phoneNumber}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">Format: 0712345678 or 254712345678</p>
-                </div>
-                
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    🏠 Address <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="address"
-                      value={customer.address}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.address ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                      placeholder="Nairobi, Kenya"
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">🏠</span>
-                  </div>
-                  {errors.address && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.address}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Row 4: Password & Confirm Password */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    🔒 Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      name="password"
-                      value={customer.password}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                      placeholder="Min. 6 characters with letters and numbers"
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">🔒</span>
-                  </div>
-                  {errors.password && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.password}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-purple-600 transition-colors">
-                    ✓ Confirm Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={customer.confirmPassword}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 pl-10 ${
-                        errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      } ${isLoading ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-                      placeholder="Re-enter password"
-                    />
-                    <span className="absolute left-3 top-3 text-gray-400 group-hover:text-purple-500 transition-colors">✓</span>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center animate-slideIn">
-                      <span className="mr-1">⚠️</span> {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Terms and Conditions */}
-              <div className="flex items-center mt-4">
-                <input type="checkbox" className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" />
-                <label className="ml-2 text-sm text-gray-600">
-                  I agree to the <a href="#" className="text-purple-600 hover:underline">Terms of Service</a> and <a href="#" className="text-purple-600 hover:underline">Privacy Policy</a>
-                </label>
-              </div>
-              
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg
-                    transform transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-[1.02] focus:ring-4 focus:ring-purple-300
-                    ${isLoading 
-                      ? 'opacity-75 cursor-not-allowed from-purple-400 to-blue-400' 
-                      : 'hover:from-purple-700 hover:to-blue-700 active:scale-95'
-                    }`}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creating Account...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center">
-                      🚀 Create Account
-                    </span>
-                  )}
-                </button>
-              </div>
-            </form>
-            
-            {/* Important Note */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
-              <p className="text-sm text-yellow-800 flex items-start">
-                <span className="mr-2 text-lg">📌</span>
-                <span>
-                  <strong className="block mb-1">Important Note:</strong>
-                  This registration is for customers only. SACCO operators and staff are onboarded by system administrators.
-                </span>
-              </p>
-            </div>
-          </div>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        {/* Logo */}
+        <div style={styles.logoContainer}>
+          <div style={styles.logo}>🚌</div>
+          <h1 style={styles.logoText}>EasyRide SACCO</h1>
+          <p style={styles.tagline}>Matatu Booking System</p>
         </div>
-      </div>
 
-      {/* Add custom animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-          20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-        .animate-slideIn {
-          animation: slideIn 0.3s ease-out;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .hover\:shadow-3xl:hover {
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-      `}</style>
+        <h2 style={styles.title}>Create Account</h2>
+        <p style={styles.subtitle}>Join our community of satisfied travelers</p>
+
+        {/* Server Error Display */}
+        {serverError && (
+          <div style={styles.errorContainer}>
+            <span style={styles.errorIcon}>⚠️</span>
+            <p style={styles.errorText}>{serverError}</p>
+          </div>
+        )}
+
+        {/* Registration Form */}
+        <form onSubmit={handleSubmit} style={styles.form}>
+          {/* Full Name */}
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>👤 Full Name *</label>
+            <input
+              type="text"
+              name="customerName"
+              value={customer.customerName}
+              onChange={handleChange}
+              disabled={isLoading}
+              style={{
+                ...styles.input,
+                ...(errors.customerName ? styles.inputError : {}),
+                ...(isLoading ? styles.disabledInput : {})
+              }}
+              placeholder="John Doe"
+            />
+            {errors.customerName && (
+              <p style={styles.errorMessage}>{errors.customerName}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>📧 Email *</label>
+            <input
+              type="email"
+              name="email"
+              value={customer.email}
+              onChange={handleChange}
+              disabled={isLoading}
+              style={{
+                ...styles.input,
+                ...(errors.email ? styles.inputError : {}),
+                ...(isLoading ? styles.disabledInput : {})
+              }}
+              placeholder="john@example.com"
+            />
+            {errors.email && (
+              <p style={styles.errorMessage}>{errors.email}</p>
+            )}
+          </div>
+
+          {/* Date of Birth and Gender - Two columns */}
+          <div style={styles.rowContainer}>
+            <div style={styles.halfWidth}>
+              <label style={styles.label}>📅 Date of Birth *</label>
+              <input
+                type="date"
+                name="dob"
+                value={customer.dob}
+                onChange={handleChange}
+                disabled={isLoading}
+                max={new Date().toISOString().split('T')[0]}
+                style={{
+                  ...styles.input,
+                  ...(errors.dob ? styles.inputError : {}),
+                  ...(isLoading ? styles.disabledInput : {})
+                }}
+              />
+              {errors.dob && (
+                <p style={styles.errorMessage}>{errors.dob}</p>
+              )}
+            </div>
+
+            <div style={styles.halfWidth}>
+              <label style={styles.label}>⚥ Gender *</label>
+              <select
+                name="gender"
+                value={customer.gender}
+                onChange={handleChange}
+                disabled={isLoading}
+                style={{
+                  ...styles.input,
+                  ...(errors.gender ? styles.inputError : {}),
+                  ...(isLoading ? styles.disabledInput : {})
+                }}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">👨 Male</option>
+                <option value="Female">👩 Female</option>
+                <option value="Other">🧑 Other</option>
+              </select>
+              {errors.gender && (
+                <p style={styles.errorMessage}>{errors.gender}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Phone Number */}
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>📱 Phone Number *</label>
+            <input
+              type="tel"
+              name="phoneNumber"
+              value={customer.phoneNumber}
+              onChange={handleChange}
+              disabled={isLoading}
+              style={{
+                ...styles.input,
+                ...(errors.phoneNumber ? styles.inputError : {}),
+                ...(isLoading ? styles.disabledInput : {})
+              }}
+              placeholder="0712345678"
+            />
+            {errors.phoneNumber && (
+              <p style={styles.errorMessage}>{errors.phoneNumber}</p>
+            )}
+            <p style={styles.helperText}>Format: 0712345678 or 254712345678</p>
+          </div>
+
+          {/* Address */}
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>🏠 Address *</label>
+            <input
+              type="text"
+              name="address"
+              value={customer.address}
+              onChange={handleChange}
+              disabled={isLoading}
+              style={{
+                ...styles.input,
+                ...(errors.address ? styles.inputError : {}),
+                ...(isLoading ? styles.disabledInput : {})
+              }}
+              placeholder="Nairobi, Kenya"
+            />
+            {errors.address && (
+              <p style={styles.errorMessage}>{errors.address}</p>
+            )}
+          </div>
+
+          {/* Password and Confirm Password - Two columns */}
+          <div style={styles.rowContainer}>
+            <div style={styles.halfWidth}>
+              <label style={styles.label}>🔒 Password *</label>
+              <input
+                type="password"
+                name="password"
+                value={customer.password}
+                onChange={handleChange}
+                disabled={isLoading}
+                style={{
+                  ...styles.input,
+                  ...(errors.password ? styles.inputError : {}),
+                  ...(isLoading ? styles.disabledInput : {})
+                }}
+                placeholder="Min. 6 characters"
+              />
+              {errors.password && (
+                <p style={styles.errorMessage}>{errors.password}</p>
+              )}
+            </div>
+
+            <div style={styles.halfWidth}>
+              <label style={styles.label}>✓ Confirm Password *</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={customer.confirmPassword}
+                onChange={handleChange}
+                disabled={isLoading}
+                style={{
+                  ...styles.input,
+                  ...(errors.confirmPassword ? styles.inputError : {}),
+                  ...(isLoading ? styles.disabledInput : {})
+                }}
+                placeholder="Re-enter password"
+              />
+              {errors.confirmPassword && (
+                <p style={styles.errorMessage}>{errors.confirmPassword}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            style={{
+              ...styles.submitButton,
+              ...(isLoading ? styles.disabledButton : {})
+            }}
+          >
+            {isLoading ? (
+              <span style={styles.loadingSpinner}>
+                <span style={styles.spinner}></span>
+                Creating Account...
+              </span>
+            ) : (
+              '🚀 Create Account'
+            )}
+          </button>
+        </form>
+
+        {/* Login Link */}
+        <div style={styles.loginLink}>
+          <p style={styles.loginText}>
+            Already have an account?{' '}
+            <Link to="/login" style={styles.loginLinkText}>
+              Login here
+            </Link>
+          </p>
+        </div>
+
+        {/* Important Note */}
+        <div style={styles.noteContainer}>
+          <p style={styles.noteText}>
+            <span style={styles.noteIcon}>📌</span>
+            <strong>Important Note:</strong> This registration is for customers only. SACCO operators and staff are onboarded by system administrators.
+          </p>
+        </div>
+
+        {/* Back to home link */}
+        <Link to="/" style={styles.backLink}>
+          ← Back to Home
+        </Link>
+      </div>
     </div>
   )
 }
+
+// ============================
+// STYLES - Matching Login Page
+// ============================
+const styles = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '20px',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: '15px',
+    padding: '40px',
+    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+    width: '100%',
+    maxWidth: '600px',
+    animation: 'slideIn 0.5s ease-out',
+  },
+  logoContainer: {
+    textAlign: 'center',
+    marginBottom: '20px',
+  },
+  logo: {
+    fontSize: '60px',
+    marginBottom: '10px',
+  },
+  logoText: {
+    fontSize: '28px',
+    fontWeight: 'bold',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '5px',
+  },
+  tagline: {
+    fontSize: '14px',
+    color: '#666',
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    marginBottom: '5px',
+  },
+  subtitle: {
+    fontSize: '14px',
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: '20px',
+  },
+  errorContainer: {
+    backgroundColor: '#fee2e2',
+    border: '1px solid #fecaca',
+    borderRadius: '8px',
+    padding: '12px',
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  errorIcon: {
+    fontSize: '20px',
+  },
+  errorText: {
+    color: '#dc2626',
+    fontSize: '14px',
+    margin: 0,
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+  },
+  rowContainer: {
+    display: 'flex',
+    gap: '15px',
+  },
+  halfWidth: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  inputContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  label: {
+    marginBottom: '5px',
+    fontWeight: '500',
+    color: '#555',
+    fontSize: '14px',
+  },
+  input: {
+    padding: '12px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    fontSize: '14px',
+    backgroundColor: '#f8fafc',
+    transition: 'border 0.3s',
+    outline: 'none',
+  },
+  inputError: {
+    border: '1px solid #dc2626',
+    backgroundColor: '#fef2f2',
+  },
+  errorMessage: {
+    color: '#dc2626',
+    fontSize: '12px',
+    marginTop: '4px',
+    marginBottom: 0,
+  },
+  helperText: {
+    fontSize: '11px',
+    color: '#9ca3af',
+    marginTop: '4px',
+    marginBottom: 0,
+  },
+  submitButton: {
+    backgroundColor: '#3b82f6',
+    color: 'white',
+    padding: '14px',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    marginTop: '10px',
+    transition: 'background-color 0.3s',
+  },
+  loginLink: {
+    textAlign: 'center',
+    marginTop: '20px',
+  },
+  loginText: {
+    fontSize: '14px',
+    color: '#666',
+  },
+  loginLinkText: {
+    color: '#3b82f6',
+    textDecoration: 'none',
+    fontWeight: '600',
+  },
+  noteContainer: {
+    marginTop: '20px',
+    padding: '12px',
+    backgroundColor: '#fff8e1',
+    border: '1px solid #ffeaa7',
+    borderRadius: '8px',
+  },
+  noteText: {
+    fontSize: '12px',
+    color: '#856404',
+    margin: 0,
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '8px',
+  },
+  noteIcon: {
+    fontSize: '16px',
+  },
+  backLink: {
+    display: 'block',
+    textAlign: 'center',
+    marginTop: '15px',
+    color: '#666',
+    textDecoration: 'none',
+    fontSize: '13px',
+  },
+  disabledButton: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
+  },
+  disabledInput: {
+    backgroundColor: '#f1f5f9',
+    cursor: 'not-allowed',
+  },
+  loadingSpinner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+  },
+  spinner: {
+    display: 'inline-block',
+    width: '16px',
+    height: '16px',
+    border: '2px solid rgba(255,255,255,0.3)',
+    borderRadius: '50%',
+    borderTopColor: 'white',
+    animation: 'spin 1s ease-in-out infinite',
+  },
+}
+
+// Add keyframes for animations
+const style = document.createElement('style')
+style.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`
+document.head.appendChild(style)
 
 export default RegisterPage
