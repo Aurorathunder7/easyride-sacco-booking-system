@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -173,6 +174,18 @@ router.post('/login', async (req, res) => {
       [user[idField]]
     );
 
+    // Generate REAL JWT token
+    const token = jwt.sign(
+      { 
+        id: user[idField], 
+        role: user.role,
+        email: user[emailField],
+        name: user[nameField]
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
@@ -188,7 +201,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       message: 'Login successful',
-      token: 'dummy-token-' + Date.now(), // You should implement proper JWT
+      token: token, // Now using real JWT token
       user: userResponse
     });
 
