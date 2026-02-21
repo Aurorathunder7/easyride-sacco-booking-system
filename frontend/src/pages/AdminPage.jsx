@@ -5,6 +5,38 @@ import { useNavigate } from 'react-router-dom'
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+// Helper function for API calls with ngrok header
+const apiFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token')
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    try {
+      // Try to parse as JSON
+      const data = JSON.parse(text)
+      throw new Error(data.message || 'Request failed')
+    } catch {
+      // If not JSON, it's probably HTML error
+      console.error('Received HTML instead of JSON:', text.substring(0, 200))
+      throw new Error('Server returned HTML instead of JSON. Please check your connection.')
+    }
+  }
+
+  return response.json()
+}
+
 const AdminPage = () => {
   const navigate = useNavigate()
   
@@ -132,30 +164,16 @@ const AdminPage = () => {
     setError(null)
     
     try {
-      const token = localStorage.getItem('token')
-      
       // Fetch operators
-      const operatorsRes = await fetch(`${API_BASE_URL}/admin/operators`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (!operatorsRes.ok) throw new Error('Failed to fetch operators')
-      const operatorsData = await operatorsRes.json()
+      const operatorsData = await apiFetch(`${API_BASE_URL}/admin/operators`)
       setOperators(operatorsData.operators || [])
       
       // Fetch routes
-      const routesRes = await fetch(`${API_BASE_URL}/admin/routes`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (!routesRes.ok) throw new Error('Failed to fetch routes')
-      const routesData = await routesRes.json()
+      const routesData = await apiFetch(`${API_BASE_URL}/admin/routes`)
       setRoutes(routesData.routes || [])
       
       // Fetch vehicles
-      const vehiclesRes = await fetch(`${API_BASE_URL}/admin/vehicles`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (!vehiclesRes.ok) throw new Error('Failed to fetch vehicles')
-      const vehiclesData = await vehiclesRes.json()
+      const vehiclesData = await apiFetch(`${API_BASE_URL}/admin/vehicles`)
       setVehicles(vehiclesData.vehicles || [])
       
     } catch (error) {
@@ -176,23 +194,10 @@ const AdminPage = () => {
     setFormSuccess('')
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/operators`, {
+      const data = await apiFetch(`${API_BASE_URL}/admin/operators`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(newOperator)
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to add operator')
-      }
-      
-      const data = await response.json()
       
       // Refresh operators list
       await fetchAllData()
@@ -233,28 +238,19 @@ const AdminPage = () => {
    */
   const handleUpdateOperator = async (operatorId, updates) => {
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/operators/${operatorId}`, {
+      await apiFetch(`${API_BASE_URL}/admin/operators/${operatorId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(updates)
       })
       
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to update operator')
-      }
-      
       await fetchAllData()
-      alert('✅ Operator updated successfully')
+      setFormSuccess('✅ Operator updated successfully')
+      setTimeout(() => setFormSuccess(''), 3000)
       
     } catch (error) {
       console.error('❌ Error updating operator:', error)
-      alert(`Failed to update operator: ${error.message}`)
+      setFormError(error.message)
+      setTimeout(() => setFormError(''), 3000)
     }
   }
 
@@ -267,24 +263,18 @@ const AdminPage = () => {
     }
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/operators/${operatorId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await apiFetch(`${API_BASE_URL}/admin/operators/${operatorId}`, {
+        method: 'DELETE'
       })
       
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to delete operator')
-      }
-      
       await fetchAllData()
-      alert('✅ Operator deleted successfully')
+      setFormSuccess('✅ Operator deleted successfully')
+      setTimeout(() => setFormSuccess(''), 3000)
       
     } catch (error) {
       console.error('❌ Error deleting operator:', error)
-      alert(`Failed to delete operator: ${error.message}`)
+      setFormError(error.message)
+      setTimeout(() => setFormError(''), 3000)
     }
   }
 
@@ -298,21 +288,10 @@ const AdminPage = () => {
     setFormSuccess('')
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/routes`, {
+      await apiFetch(`${API_BASE_URL}/admin/routes`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(newRoute)
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to add route')
-      }
       
       await fetchAllData()
       
@@ -346,24 +325,18 @@ const AdminPage = () => {
     }
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/routes/${routeId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await apiFetch(`${API_BASE_URL}/admin/routes/${routeId}`, {
+        method: 'DELETE'
       })
       
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to delete route')
-      }
-      
       await fetchAllData()
-      alert('✅ Route deleted successfully')
+      setFormSuccess('✅ Route deleted successfully')
+      setTimeout(() => setFormSuccess(''), 3000)
       
     } catch (error) {
       console.error('❌ Error deleting route:', error)
-      alert(`Failed to delete route: ${error.message}`)
+      setFormError(error.message)
+      setTimeout(() => setFormError(''), 3000)
     }
   }
 
@@ -377,21 +350,10 @@ const AdminPage = () => {
     setFormSuccess('')
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/vehicles`, {
+      await apiFetch(`${API_BASE_URL}/admin/vehicles`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(newVehicle)
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to add vehicle')
-      }
       
       await fetchAllData()
       
@@ -431,20 +393,13 @@ const AdminPage = () => {
    */
   const fetchReports = async (period = 'daily') => {
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/admin/reports/${period}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) throw new Error('Failed to fetch reports')
-      
-      const data = await response.json()
+      const data = await apiFetch(`${API_BASE_URL}/admin/reports/${period}`)
       setReports(prev => ({ ...prev, [period]: data }))
       
     } catch (error) {
       console.error('❌ Error fetching reports:', error)
-      alert('Failed to load reports')
+      setFormError('Failed to load reports')
+      setTimeout(() => setFormError(''), 3000)
     }
   }
 
@@ -456,7 +411,10 @@ const AdminPage = () => {
       const token = localStorage.getItem('token')
       
       const response = await fetch(`${API_BASE_URL}/admin/reports/${period}/export`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
       })
       
       if (!response.ok) throw new Error('Failed to export report')
@@ -470,7 +428,8 @@ const AdminPage = () => {
       
     } catch (error) {
       console.error('❌ Export error:', error)
-      alert('Failed to export report')
+      setFormError('Failed to export report')
+      setTimeout(() => setFormError(''), 3000)
     }
   }
 
@@ -1197,7 +1156,7 @@ const AdminPage = () => {
                         type="number"
                         name="capacity"
                         value={newVehicle.capacity}
-                        onChange={(e) => setNewVehicle({...newVehicle, capacity: e.target.value})}
+                        onChange={(e) => setNewVehicle({...newVehicle, capacity: parseInt(e.target.value)})}
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="14"
