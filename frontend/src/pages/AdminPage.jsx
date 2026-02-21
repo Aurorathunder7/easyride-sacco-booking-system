@@ -16,19 +16,25 @@ const apiFetch = async (url, options = {}) => {
     ...options.headers
   }
 
+  console.log('🔍 Fetching:', url)
+  console.log('🔍 Headers:', headers)
+
   try {
     const response = await fetch(url, {
       ...options,
       headers
     })
 
+    console.log('🔍 Response status:', response.status)
+    console.log('🔍 Response headers:', response.headers.get('content-type'))
+
     const text = await response.text()
-    console.log('Response status:', response.status)
-    console.log('Response preview:', text.substring(0, 100))
+    console.log('🔍 Raw response (first 500 chars):', text.substring(0, 500))
     
     // Try to parse as JSON regardless of status code
     try {
       const data = JSON.parse(text)
+      console.log('🔍 Parsed JSON:', data)
       
       // If response is not ok, throw the error message from backend
       if (!response.ok) {
@@ -38,9 +44,15 @@ const apiFetch = async (url, options = {}) => {
       return data
       
     } catch (parseError) {
-      // If it's not JSON, log it and throw
-      console.error('Failed to parse response as JSON:', text.substring(0, 200))
-      throw new Error('Server returned invalid response format')
+      console.error('🔍 Failed to parse as JSON:', parseError.message)
+      console.error('🔍 Response was:', text.substring(0, 200))
+      
+      // If it's a 401 Unauthorized, show a more helpful message
+      if (response.status === 401) {
+        throw new Error('Not authorized. Please login again.')
+      }
+      
+      throw new Error(`Server returned: ${text.substring(0, 100)}`)
     }
     
   } catch (error) {
