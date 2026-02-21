@@ -16,25 +16,37 @@ const apiFetch = async (url, options = {}) => {
     ...options.headers
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers
-  })
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers
+    })
 
-  if (!response.ok) {
     const text = await response.text()
+    console.log('Response status:', response.status)
+    console.log('Response preview:', text.substring(0, 100))
+    
+    // Try to parse as JSON regardless of status code
     try {
-      // Try to parse as JSON
       const data = JSON.parse(text)
-      throw new Error(data.message || 'Request failed')
-    } catch {
-      // If not JSON, it's probably HTML error
-      console.error('Received HTML instead of JSON:', text.substring(0, 200))
-      throw new Error('Server returned HTML instead of JSON. Please check your connection.')
+      
+      // If response is not ok, throw the error message from backend
+      if (!response.ok) {
+        throw new Error(data.message || `Request failed with status ${response.status}`)
+      }
+      
+      return data
+      
+    } catch (parseError) {
+      // If it's not JSON, log it and throw
+      console.error('Failed to parse response as JSON:', text.substring(0, 200))
+      throw new Error('Server returned invalid response format')
     }
+    
+  } catch (error) {
+    console.error('API fetch error:', error)
+    throw error
   }
-
-  return response.json()
 }
 
 const AdminPage = () => {
