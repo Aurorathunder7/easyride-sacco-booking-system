@@ -149,6 +149,47 @@ const AdminPage = () => {
     }
     
     setAdmin(user)
+    
+    // 🔍 DEBUG CODE - Check connection
+    const debugConnection = async () => {
+      console.log('🔍 DEBUG: AdminPage mounted')
+      console.log('🔍 API_BASE_URL:', API_BASE_URL)
+      console.log('🔍 Token exists:', !!token)
+      console.log('🔍 User:', user)
+      
+      try {
+        const testUrl = `${API_BASE_URL}/admin/operators`
+        console.log('🔍 Testing URL:', testUrl)
+        
+        const response = await fetch(testUrl, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        console.log('🔍 Response status:', response.status)
+        console.log('🔍 Response headers:', response.headers.get('content-type'))
+        
+        const text = await response.text()
+        console.log('🔍 Raw response (first 300 chars):', text.substring(0, 300))
+        
+        if (text.trim().startsWith('<!DOCTYPE')) {
+          console.error('🔍❌ Received HTML instead of JSON!')
+        } else {
+          try {
+            const json = JSON.parse(text)
+            console.log('🔍✅ Successfully parsed JSON:', json)
+          } catch (e) {
+            console.error('🔍❌ Failed to parse JSON:', e.message)
+          }
+        }
+      } catch (error) {
+        console.error('🔍❌ Debug fetch error:', error)
+      }
+    }
+    
+    debugConnection()
     fetchAllData()
   }, [navigate])
 
