@@ -77,26 +77,85 @@ router.post('/register', async (req, res) => {
 });
 
 // @route   POST /api/login
-// @desc    Login user
+// @desc    Login user (customer, operator, admin)
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    // Find user by email
-    const [users] = await pool.query(
-      'SELECT * FROM customers WHERE email = ?',
-      [email]
-    );
+    // Validate input
+    if (!email || !password || !role) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide email, password and role' 
+      });
+    }
 
-    if (users.length === 0) {
+    let user = null;
+    let table = '';
+    let idField = '';
+    let nameField = '';
+    let emailField = '';
+
+    // Select table based on role
+    switch (role) {
+      case 'customer':
+        table = 'customers';
+        idField = 'custID';
+        nameField = 'customerName';
+        emailField = 'email';
+        [user] = await pool.query(
+          `SELECT *, 'customer' as role FROM ${table} WHERE ${emailField} = ?`, 
+          [email]
+        );
+        break;
+        
+      case 'operator':
+        table = 'operators';
+        idField = 'opID';
+        nameField = 'operatorName';
+        emailField = 'opEmail';
+        [user] = await pool.query(
+          `SELECT *, 'operator' as role FROM ${table} WHERE ${emailField} = ?`, 
+          [email]
+        );
+        break;
+        
+      case 'admin':
+        table = 'admins';
+        idField = 'adminID';
+        nameField = 'adminName';
+        emailField = 'adminEmail';
+        [user] = await pool.query(
+          `SELECT *, 'admin' as role FROM ${table} WHERE ${emailField} = ?`, 
+          [email]
+        );
+        break;
+        
+      default:
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid role. Must be customer, operator, or admin.' 
+        });
+    }
+
+    // Check if user exists
+    if (!user || user.length === 0) {
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid email or password' 
       });
     }
 
-    const user = users[0];
+    user = user[0];
+
+    // Check if account is active (for operators and admins)
+    if ((role === 'operator' || role === 'admin') && user.isActive === 0) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Your account has been deactivated. Please contact administrator.' 
+      });
+    }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -108,13 +167,29 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Return user info (excluding password)
+    // Update last login
+    await pool.query(
+      `UPDATE ${table} SET lastLogin = NOW() WHERE ${idField} = ?`,
+      [user[idField]]
+    );
+
+    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
-    
+
+    // Add role-specific fields to response
+    const userResponse = {
+      ...userWithoutPassword,
+      id: user[idField],
+      name: user[nameField],
+      email: user[emailField],
+      role: user.role
+    };
+
     res.json({
       success: true,
       message: 'Login successful',
-      user: userWithoutPassword
+      token: 'dummy-token-' + Date.now(), // You should implement proper JWT
+      user: userResponse
     });
 
   } catch (error) {
