@@ -19,6 +19,8 @@ router.post('/register', async (req, res) => {
       password 
     } = req.body;
 
+    console.log('📝 Registration attempt:', { email, customerName });
+
     // Validate required fields
     if (!customerName || !email || !dob || !gender || !phoneNumber || !address || !password) {
       return res.status(400).json({ 
@@ -52,6 +54,8 @@ router.post('/register', async (req, res) => {
       [customerName, email, dob, gender, phoneNumber, address, hashedPassword]
     );
 
+    console.log('✅ Registration successful, ID:', result.insertId);
+
     // Return success response
     res.status(201).json({
       success: true,
@@ -60,9 +64,8 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error:', error);
     
-    // Handle duplicate entry error
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ 
         success: false, 
@@ -83,6 +86,8 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password, role } = req.body;
+
+    console.log('🔐 Login attempt:', { email, role });
 
     // Validate input
     if (!email || !password || !role) {
@@ -105,10 +110,6 @@ router.post('/login', async (req, res) => {
         idField = 'custID';
         nameField = 'customerName';
         emailField = 'email';
-        [user] = await pool.query(
-          `SELECT *, 'customer' as role FROM ${table} WHERE ${emailField} = ?`, 
-          [email]
-        );
         break;
         
       case 'operator':
@@ -116,10 +117,6 @@ router.post('/login', async (req, res) => {
         idField = 'opID';
         nameField = 'operatorName';
         emailField = 'opEmail';
-        [user] = await pool.query(
-          `SELECT *, 'operator' as role FROM ${table} WHERE ${emailField} = ?`, 
-          [email]
-        );
         break;
         
       case 'admin':
@@ -127,10 +124,6 @@ router.post('/login', async (req, res) => {
         idField = 'adminID';
         nameField = 'adminName';
         emailField = 'adminEmail';
-        [user] = await pool.query(
-          `SELECT *, 'admin' as role FROM ${table} WHERE ${emailField} = ?`, 
-          [email]
-        );
         break;
         
       default:
@@ -140,76 +133,79 @@ router.post('/login', async (req, res) => {
         });
     }
 
+    // Query user
+    const [rows] = await pool.query(
+      `SELECT * FROM ${table} WHERE ${emailField} = ?`, 
+      [email]
+    );
+
     // Check if user exists
-    if (!user || user.length === 0) {
+    if (!rows || rows.length === 0) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid email or password' 
       });
     }
 
-    user = user[0];
-
-    // Check if account is active (for operators and admins)
-    if ((role === 'operator' || role === 'admin') && user.isActive === 0) {
-      return res.status(403).json({ 
-        success: false,
-        message: 'Your account has been deactivated. Please contact administrator.' 
-      });
-    }
+    user = rows[0];
+    console.log('✅ User found:', user[emailField]);
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
+      console.log('❌ Password mismatch for:', email);
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid email or password' 
       });
     }
 
-    // Update last login
-    await pool.query(
-      `UPDATE ${table} SET lastLogin = NOW() WHERE ${idField} = ?`,
-      [user[idField]]
-    );
+    console.log('✅ Password matched for:', email);
 
-    // Generate REAL JWT token
+    // Generate JWT token
     const token = jwt.sign(
       { 
         id: user[idField], 
-        role: user.role,
+        role: role,
         email: user[emailField],
         name: user[nameField]
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'your-secret-key-change-this',
       { expiresIn: '30d' }
     );
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
-
-    // Add role-specific fields to response
+    // Create safe user object without password
     const userResponse = {
-      ...userWithoutPassword,
       id: user[idField],
       name: user[nameField],
       email: user[emailField],
-      role: user.role
+      phone: user.phoneNumber || user.phoneNum,
+      role: role
     };
+
+    // Add role-specific fields if needed
+    if (role === 'customer') {
+      userResponse.custID = user.custID;
+    } else if (role === 'operator') {
+      userResponse.opID = user.opID;
+    }
+
+    console.log('✅ Login successful for:', email);
 
     res.json({
       success: true,
       message: 'Login successful',
-      token: token, // Now using real JWT token
+      token: token,
       user: userResponse
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Server error during login' 
+      message: 'Server error during login: ' + error.message 
     });
   }
 });
