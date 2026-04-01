@@ -32,6 +32,9 @@ function OperatorDashboard() {
   const [searchPhone, setSearchPhone] = useState('')
   const [searchResult, setSearchResult] = useState(null)
   const [searching, setSearching] = useState(false)
+  
+  // Loading states for actions
+  const [actionLoading, setActionLoading] = useState(null)
 
   // ============================
   // EFFECTS
@@ -45,10 +48,6 @@ function OperatorDashboard() {
   // API FUNCTIONS
   // ============================
   
-  /**
-   * Fetch operator dashboard data
-   * Endpoint: GET /api/operators/dashboard
-   */
   const fetchDashboardData = async () => {
     setLoading(true)
     setError(null)
@@ -102,10 +101,6 @@ function OperatorDashboard() {
     }
   }
 
-  /**
-   * Search customer by phone number
-   * Endpoint: GET /api/customers/search?phone=...
-   */
   const handleSearchCustomer = async () => {
     if (!searchPhone.trim()) {
       alert('Please enter a phone number')
@@ -141,10 +136,325 @@ function OperatorDashboard() {
     }
   }
 
-  /**
-   * Generate daily report
-   * Endpoint: GET /api/operators/reports/daily
-   */
+  const generateReportHTML = (reportData) => {
+    const reportDate = new Date().toLocaleDateString('en-KE', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+    
+    const reportTime = new Date().toLocaleTimeString('en-KE')
+    
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyRide Daily Report - ${reportDate}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fef9e8 0%, #fff5e6 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .report-header {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: white;
+            padding: 30px;
+            border-radius: 16px 16px 0 0;
+            text-align: center;
+        }
+        
+        .report-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .report-header .date {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .report-header .generated {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: white;
+            border-bottom: 1px solid #fed7aa;
+        }
+        
+        .stat-card {
+            background: #fffbef;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #fed7aa;
+        }
+        
+        .stat-card .stat-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .stat-label {
+            font-size: 14px;
+            color: #b45309;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d97706;
+        }
+        
+        .bookings-section {
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #78350f;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f59e0b;
+        }
+        
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .bookings-table th {
+            background: #fffbef;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #b45309;
+            text-transform: uppercase;
+            border-bottom: 1px solid #fed7aa;
+        }
+        
+        .bookings-table td {
+            padding: 12px;
+            font-size: 14px;
+            color: #78350f;
+            border-bottom: 1px solid #fed7aa;
+        }
+        
+        .bookings-table tr:hover {
+            background: #fffbef;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status-confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            padding: 20px;
+            color: #b45309;
+            font-size: 12px;
+        }
+        
+        .print-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+            transition: all 0.3s;
+        }
+        
+        .print-btn:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .print-btn {
+                display: none;
+            }
+            .stats-grid {
+                break-inside: avoid;
+            }
+            .bookings-table tr {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>
+                <span>🚌</span>
+                EasyRide SACCO
+                <span>📊</span>
+            </h1>
+            <p class="date">Daily Sales Report</p>
+            <p class="date">${reportDate}</p>
+            <p class="generated">Generated on: ${reportDate} at ${reportTime}</p>
+            <p class="generated">Generated by: ${operatorInfo?.name || operatorInfo?.operatorName || 'Operator'}</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-label">Today's Bookings</div>
+                <div class="stat-value">${reportData.summary?.totalBookings || 0}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value">KES ${(reportData.summary?.totalRevenue || 0).toLocaleString()}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-label">Confirmed Bookings</div>
+                <div class="stat-value">${reportData.summary?.confirmedBookings || 0}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-label">Cancelled Bookings</div>
+                <div class="stat-value">${reportData.summary?.cancelledBookings || 0}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-label">Pending Bookings</div>
+                <div class="stat-value">${reportData.summary?.pendingBookings || 0}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">Total Customers</div>
+                <div class="stat-value">${reportData.summary?.totalCustomers || recentBookings.length}</div>
+            </div>
+        </div>
+        
+        <div class="bookings-section">
+            <h2 class="section-title">📋 Recent Bookings</h2>
+            ${recentBookings.length === 0 ? (
+                '<p style="text-align: center; color: #b45309;">No bookings found for today.</p>'
+            ) : (
+                `<table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Customer</th>
+                            <th>Route</th>
+                            <th>Seats</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recentBookings.map(booking => {
+                            const bookingId = booking.bookingReference || `ER${booking.bookingID || booking.id}`
+                            const statusClass = booking.status === 'confirmed' ? 'status-confirmed' : 
+                                              booking.status === 'cancelled' ? 'status-cancelled' :
+                                              booking.status === 'completed' ? 'status-completed' : 'status-pending'
+                            return `
+                            <tr>
+                                <td>${bookingId}</td>
+                                <td>${booking.customerName || booking.customer || 'N/A'}</td>
+                                <td>${booking.route || 'N/A'}</td>
+                                <td>${booking.seats || booking.seatNumber || 'N/A'}</td>
+                                <td><strong>KES ${(booking.amount || 0).toLocaleString()}</strong></td>
+                                <td><span class="status-badge ${statusClass}">${booking.status || 'pending'}</span></td>
+                            </tr>
+                            `
+                        }).join('')}
+                    </tbody>
+                </table>`
+            )}
+        </div>
+        
+        <div class="footer">
+            <p>✨ Thank you for choosing EasyRide! ✨</p>
+            <p>This report is system-generated and shows sales data for ${reportDate}</p>
+            <p>For inquiries, contact: 0700 000 000 | info@easyride.co.ke</p>
+        </div>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+    <script>
+        window.scrollTo(0, 0);
+    </script>
+</body>
+</html>
+    `
+  }
+
   const handleGenerateReport = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -153,26 +463,38 @@ function OperatorDashboard() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
-      if (!response.ok) throw new Error('Failed to generate report')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to generate report')
+      }
       
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `daily-report-${new Date().toISOString().split('T')[0]}.pdf`
-      a.click()
+      const data = await response.json()
+      console.log('📊 Report data:', data)
+      
+      const reportHTML = generateReportHTML(data)
+      
+      const reportWindow = window.open('', '_blank')
+      if (!reportWindow) {
+        alert('Please allow popups to view the report')
+        return
+      }
+      
+      reportWindow.document.write(reportHTML)
+      reportWindow.document.close()
       
     } catch (error) {
       console.error('❌ Report error:', error)
-      alert('Failed to generate report')
+      alert(`Failed to generate report: ${error.message}`)
     }
   }
 
-  /**
-   * Update booking status
-   * Endpoint: PUT /api/bookings/:id/status
-   */
   const handleUpdateStatus = async (bookingId, newStatus) => {
+    if (!window.confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) {
+      return
+    }
+    
+    setActionLoading(`${bookingId}_status`)
+    
     try {
       const token = localStorage.getItem('token')
       
@@ -185,39 +507,320 @@ function OperatorDashboard() {
         body: JSON.stringify({ status: newStatus })
       })
       
-      if (!response.ok) throw new Error('Failed to update status')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to update status')
+      }
       
-      // Refresh dashboard
-      fetchDashboardData()
+      await fetchDashboardData()
+      alert(`✅ Booking marked as ${newStatus} successfully`)
       
     } catch (error) {
       console.error('❌ Status update error:', error)
-      alert('Failed to update booking status')
+      alert(`Failed to update booking status: ${error.message}`)
+    } finally {
+      setActionLoading(null)
     }
   }
 
-  /**
-   * Print ticket
-   * Endpoint: GET /api/bookings/:id/ticket
-   */
-  const handlePrintTicket = async (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
+    const booking = recentBookings.find(b => (b.bookingID || b.id) === bookingId)
+    
+    if (booking && booking.travelDate) {
+      const travelTime = new Date(booking.travelDate).getTime()
+      const currentTime = new Date().getTime()
+      const minutesUntilTravel = (travelTime - currentTime) / (1000 * 60)
+      
+      if (minutesUntilTravel < 30) {
+        alert(`❌ Cannot cancel booking\n\nBookings can only be cancelled at least 30 minutes before departure.\nYou have ${Math.max(0, Math.floor(minutesUntilTravel))} minutes remaining.`)
+        return
+      }
+    }
+    
+    if (!window.confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+      return
+    }
+    
+    setActionLoading(`${bookingId}_cancel`)
+    
     try {
       const token = localStorage.getItem('token')
       
-      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/ticket`, {
+      const response = await fetch(`${API_BASE_URL}/customers/bookings/${bookingId}/cancel`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to cancel booking')
+      }
+      
+      await fetchDashboardData()
+      alert('✅ Booking cancelled successfully')
+      
+    } catch (error) {
+      console.error('❌ Cancel booking error:', error)
+      alert(`Failed to cancel booking: ${error.message}`)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleViewDetails = (bookingId) => {
+    navigate(`/operator/bookings/${bookingId}`)
+  }
+
+  const handlePrintTicket = async (bookingId) => {
+    setActionLoading(`${bookingId}_print`)
+    
+    try {
+      const token = localStorage.getItem('token')
+      
+      const bookingResponse = await fetch(`${API_BASE_URL}/customers/bookings/${bookingId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
-      if (!response.ok) throw new Error('Failed to generate ticket')
+      if (!bookingResponse.ok) {
+        throw new Error('Failed to fetch booking details')
+      }
       
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      window.open(url, '_blank')
+      const bookingData = await bookingResponse.json()
+      const booking = bookingData.booking || bookingData
+      
+      const ticketHTML = generateTicketHTML(booking)
+      
+      const printWindow = window.open('', '_blank')
+      printWindow.document.write(ticketHTML)
+      printWindow.document.close()
       
     } catch (error) {
       console.error('❌ Ticket error:', error)
       alert('Failed to generate ticket')
+    } finally {
+      setActionLoading(null)
     }
+  }
+
+  const generateTicketHTML = (booking) => {
+    const bookingRef = booking.bookingReference || `ER${booking.bookingID || booking.id}`
+    const travelDate = new Date(booking.travelDate).toLocaleString()
+    const bookingDate = new Date(booking.bookingDate).toLocaleString()
+    const seats = booking.seatNumber || (booking.seats?.join(', ')) || 'N/A'
+    const amount = booking.amount || booking.totalAmount || booking.total_fare || 0
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>EasyRide SACCO - Ticket</title>
+        <meta charset="UTF-8">
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #fef9e8 0%, #fff5e6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+          }
+          .ticket {
+            max-width: 450px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+          }
+          .ticket-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: white;
+            padding: 30px 25px;
+            text-align: center;
+          }
+          .ticket-header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+          }
+          .ticket-header .bus-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+          }
+          .ticket-body {
+            padding: 25px;
+          }
+          .info-section {
+            margin-bottom: 20px;
+          }
+          .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #fed7aa;
+          }
+          .info-label {
+            font-weight: 600;
+            color: #b45309;
+            font-size: 14px;
+          }
+          .info-value {
+            font-weight: 600;
+            color: #78350f;
+            font-size: 14px;
+            text-align: right;
+          }
+          .seats-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #fed7aa;
+          }
+          .seats-section .seats-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #f59e0b;
+          }
+          .price-section {
+            background: #fffbeb;
+            border-radius: 16px;
+            padding: 15px 20px;
+            margin: 20px 0;
+          }
+          .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          }
+          .total-price {
+            border-top: 2px solid #fed7aa;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: bold;
+            font-size: 18px;
+          }
+          .barcode {
+            text-align: center;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 3px;
+            background: #fffbeb;
+            padding: 12px;
+            border-radius: 8px;
+          }
+          .footer {
+            background: #fffbeb;
+            padding: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #b45309;
+            border-top: 1px solid #fed7aa;
+          }
+          @media print {
+            body {
+              background: white;
+              padding: 0;
+            }
+            .no-print {
+              display: none;
+            }
+            .ticket {
+              box-shadow: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="ticket">
+          <div class="ticket-header">
+            <div class="bus-icon">🚌</div>
+            <h1>EasyRide SACCO</h1>
+            <p>Matatu Booking Ticket</p>
+          </div>
+          <div class="ticket-body">
+            <div class="info-section">
+              <div class="info-row">
+                <span class="info-label">Booking ID</span>
+                <span class="info-value">${bookingRef}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Date & Time</span>
+                <span class="info-value">${bookingDate}</span>
+              </div>
+            </div>
+            
+            <div class="info-section">
+              <div class="info-row">
+                <span class="info-label">Passenger Name</span>
+                <span class="info-value">${booking.customerName || booking.passengerName || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Phone Number</span>
+                <span class="info-value">${booking.phoneNumber || booking.customerPhone || 'N/A'}</span>
+              </div>
+            </div>
+            
+            <div class="seats-section">
+              <div class="seats-number">${seats}</div>
+              <div class="seats-label">Seat${seats.includes(',') ? 's' : ''}</div>
+            </div>
+            
+            <div class="info-section">
+              <div class="info-row">
+                <span class="info-label">Route</span>
+                <span class="info-value">${booking.route || `${booking.origin} → ${booking.destination}`}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Departure</span>
+                <span class="info-value">${travelDate}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Vehicle</span>
+                <span class="info-value">${booking.vehicleNumber || 'N/A'}</span>
+              </div>
+            </div>
+            
+            <div class="price-section">
+              <div class="price-row total-price">
+                <span>Total Amount</span>
+                <span style="color: #f59e0b;">KSh ${amount.toLocaleString()}</span>
+              </div>
+            </div>
+            
+            <div class="barcode">
+              ${bookingRef}
+            </div>
+          </div>
+          <div class="footer">
+            <p>Please present this ticket at boarding</p>
+            <p>For inquiries: 0797338021 | info@easyride.co.ke</p>
+          </div>
+        </div>
+        <div class="no-print" style="position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px;">
+          <button onclick="window.print()" style="background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer;">
+            🖨️ Print Ticket
+          </button>
+          <button onclick="window.close()" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer;">
+            ✕ Close
+          </button>
+        </div>
+        <script>
+          setTimeout(() => window.print(), 500);
+        </script>
+      </body>
+      </html>
+    `
   }
 
   // ============================
@@ -225,6 +828,7 @@ function OperatorDashboard() {
   // ============================
   
   const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('en-KE', {
       month: 'short',
       day: 'numeric',
@@ -234,13 +838,28 @@ function OperatorDashboard() {
   }
 
   const getStatusStyle = (status) => {
+    const statusLower = status?.toLowerCase() || ''
+    
     const styles = {
-      confirmed: { bg: '#d1fae5', color: '#065f46' },
-      pending: { bg: '#fef3c7', color: '#92400e' },
-      cancelled: { bg: '#fee2e2', color: '#991b1b' },
-      completed: { bg: '#dbeafe', color: '#1e40af' }
+      confirmed: { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #10b981' },
+      pending: { backgroundColor: '#fed7aa', color: '#92400e', border: '1px solid #f59e0b' },
+      cancelled: { backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444' },
+      completed: { backgroundColor: '#e0e7ff', color: '#3730a3', border: '1px solid #6366f1' },
+      refunded: { backgroundColor: '#f3e8ff', color: '#6b21a5', border: '1px solid #8b5cf6' }
     }
-    return styles[status?.toLowerCase()] || { bg: '#f3f4f6', color: '#4b5563' }
+    
+    return styles[statusLower] || { backgroundColor: '#f3f4f6', color: '#4b5563', border: '1px solid #9ca3af' }
+  }
+
+  const canCancelBooking = (booking) => {
+    const status = booking.status?.toLowerCase()
+    if (status !== 'confirmed' && status !== 'pending') return false
+    
+    const travelDate = new Date(booking.travelDate)
+    const currentTime = new Date()
+    const minutesUntilTravel = (travelDate - currentTime) / (1000 * 60)
+    
+    return minutesUntilTravel >= 30
   }
 
   // ============================
@@ -250,8 +869,10 @@ function OperatorDashboard() {
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
-        <div style={styles.loadingSpinner}></div>
-        <p style={styles.loadingText}>Loading operator dashboard...</p>
+        <div style={styles.loadingContent}>
+          <div style={styles.spinner}></div>
+          <p style={styles.loadingText}>Loading operator dashboard...</p>
+        </div>
       </div>
     )
   }
@@ -259,35 +880,40 @@ function OperatorDashboard() {
   if (error) {
     return (
       <div style={styles.errorContainer}>
-        <div style={styles.errorIcon}>❌</div>
-        <h2 style={styles.errorTitle}>Something went wrong</h2>
-        <p style={styles.errorText}>{error}</p>
-        <button onClick={fetchDashboardData} style={styles.retryButton}>
-          Try Again
-        </button>
+        <div style={styles.errorCard}>
+          <div style={styles.errorIcon}>❌</div>
+          <h2 style={styles.errorTitle}>Something went wrong</h2>
+          <p style={styles.errorMessage}>{error}</p>
+          <button onClick={fetchDashboardData} style={styles.retryButton}>
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
     <div style={styles.container}>
-      {/* Dashboard Header */}
-      <div style={styles.header}>
-        <div>
+      <div style={styles.contentWrapper}>
+        {/* Dashboard Header */}
+        <div style={styles.header}>
+          <div style={styles.headerIcon}>🏢</div>
           <h1 style={styles.title}>
-            🏢 Welcome, {operatorInfo?.name || operatorInfo?.operatorName || 'Operator'}!
+            Welcome, {operatorInfo?.name || operatorInfo?.operatorName || 'Operator'}!
           </h1>
           <p style={styles.subtitle}>
             {operatorInfo?.officeLocation || 'Manage bookings and customer reservations'}
           </p>
           {operatorInfo?.shift && (
-            <p style={styles.shiftInfo}>Shift: {operatorInfo.shift}</p>
+            <div style={styles.shiftBadge}>
+              ⏰ Shift: {operatorInfo.shift}
+            </div>
           )}
         </div>
         
-        <div style={styles.headerActions}>
-          {/* Quick Customer Search */}
-          <div style={styles.searchBox}>
+        {/* Header Actions with Search */}
+        <div style={styles.searchContainer}>
+          <div style={styles.searchWrapper}>
             <input
               type="text"
               placeholder="Search customer by phone..."
@@ -305,22 +931,37 @@ function OperatorDashboard() {
             </button>
           </div>
           
+          <div style={styles.actionButtons}>
+            <button 
+              onClick={() => navigate('/operator/book')}
+              style={styles.quickBookButton}
+            >
+              📱 Quick Book
+            </button>
+            <button 
+              onClick={() => navigate('/operator/bookings')}
+              style={styles.allBookingsButton}
+            >
+              📋 All Bookings
+            </button>
+          </div>
+          
           {/* Search Result Popup */}
           {searchResult && (
-            <div style={styles.searchResult}>
+            <div style={styles.searchResultPopup}>
               {searchResult.notFound ? (
-                <p style={styles.notFound}>❌ Customer not found</p>
+                <p style={styles.notFoundText}>❌ Customer not found</p>
               ) : (
                 <div>
-                  <p style={styles.resultName}>✓ {searchResult.customerName}</p>
-                  <p style={styles.resultPhone}>{searchResult.phoneNumber}</p>
+                  <p style={styles.customerName}>✓ {searchResult.customerName}</p>
+                  <p style={styles.customerPhone}>{searchResult.phoneNumber}</p>
                   <button
                     onClick={() => {
                       navigate('/operator/book', { state: { customer: searchResult } })
                       setSearchResult(null)
                       setSearchPhone('')
                     }}
-                    style={styles.resultAction}
+                    style={styles.bookForCustomerButton}
                   >
                     Book for this customer →
                   </button>
@@ -328,598 +969,656 @@ function OperatorDashboard() {
               )}
               <button
                 onClick={() => setSearchResult(null)}
-                style={styles.closeResult}
+                style={styles.closeButton}
               >
                 ✕
               </button>
             </div>
           )}
-          
-          <button style={styles.quickBookButton} onClick={() => navigate('/operator/book')}>
-            📱 Quick Book
-          </button>
-          <button style={styles.viewAllButton} onClick={() => navigate('/operator/bookings')}>
-            📋 All Bookings
-          </button>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, backgroundColor: '#dbeafe', color: '#1d4ed8'}}>📅</div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>{stats.todayBookings || 0}</h3>
-            <p style={styles.statLabel}>Today's Bookings</p>
-          </div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, backgroundColor: '#dcfce7', color: '#15803d'}}>💰</div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>
-              KSh {(stats.totalRevenue || 0).toLocaleString()}
-            </h3>
-            <p style={styles.statLabel}>Total Revenue</p>
-          </div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, backgroundColor: '#fef3c7', color: '#92400e'}}>⏳</div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>
-              KSh {(stats.pendingPayments || 0).toLocaleString()}
-            </h3>
-            <p style={styles.statLabel}>Pending Payments</p>
-          </div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, backgroundColor: '#f3e8ff', color: '#7c3aed'}}>🪑</div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>{stats.availableSeats || 0}</h3>
-            <p style={styles.statLabel}>Available Seats</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>Quick Actions</h2>
-        <div style={styles.actionsGrid}>
-          <button style={styles.actionCard} onClick={() => navigate('/operator/book')}>
-            <div style={styles.actionIcon}>➕</div>
-            <h3 style={styles.actionTitle}>New Booking</h3>
-            <p style={styles.actionDesc}>Book for a customer</p>
-          </button>
-          
-          <button style={styles.actionCard} onClick={handleGenerateReport}>
-            <div style={styles.actionIcon}>📊</div>
-            <h3 style={styles.actionTitle}>Daily Report</h3>
-            <p style={styles.actionDesc}>Generate sales report</p>
-          </button>
-          
-          <button style={styles.actionCard} onClick={() => navigate('/operator/schedules')}>
-            <div style={styles.actionIcon}>🚌</div>
-            <h3 style={styles.actionTitle}>View Schedules</h3>
-            <p style={styles.actionDesc}>Check bus schedules</p>
-          </button>
-          
-          <button style={styles.actionCard} onClick={() => navigate('/operator/customers')}>
-            <div style={styles.actionIcon}>👥</div>
-            <h3 style={styles.actionTitle}>Customers</h3>
-            <p style={styles.actionDesc}>View all customers</p>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Bookings */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Recent Bookings</h2>
-          <button style={styles.seeAllButton} onClick={() => navigate('/operator/bookings')}>
-            See All →
-          </button>
-        </div>
-        
-        {recentBookings.length === 0 ? (
-          <div style={styles.emptyState}>
-            <p style={styles.emptyText}>No recent bookings</p>
-          </div>
-        ) : (
-          <div style={styles.bookingsTable}>
-            <div style={styles.tableHeader}>
-              <div style={styles.tableCell}>Booking ID</div>
-              <div style={styles.tableCell}>Customer</div>
-              <div style={styles.tableCell}>Route</div>
-              <div style={styles.tableCell}>Seats</div>
-              <div style={styles.tableCell}>Amount</div>
-              <div style={styles.tableCell}>Time</div>
-              <div style={styles.tableCell}>Status</div>
-              <div style={styles.tableCell}>Actions</div>
+        {/* Stats Cards */}
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <div style={{...styles.statIcon, background: '#fee2e2'}}>
+              <span style={styles.statIconText}>📅</span>
             </div>
-            
-            {recentBookings.map(booking => {
-              const statusStyle = getStatusStyle(booking.status)
-              return (
-                <div key={booking.bookingID || booking.id} style={styles.tableRow}>
-                  <div style={styles.tableCell}>
-                    <span style={styles.bookingId}>
-                      {booking.bookingReference || booking.bookingId}
-                    </span>
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    <div style={styles.customerInfo}>
-                      <div style={styles.customerName}>
-                        {booking.customerName || booking.customer}
-                      </div>
-                      <div style={styles.customerPhone}>
-                        {booking.customerPhone || booking.phone}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    {booking.route || `${booking.origin || ''} → ${booking.destination || ''}`}
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    {booking.seatNumbers?.join(', ') || booking.seats}
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    KSh {(booking.totalAmount || booking.amount || 0).toLocaleString()}
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    {formatDateTime(booking.createdAt || booking.bookingDate)}
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    <span style={{
-                      ...styles.statusBadge,
-                      backgroundColor: statusStyle.bg,
-                      color: statusStyle.color
-                    }}>
-                      {booking.status || 'pending'}
-                    </span>
-                  </div>
-                  
-                  <div style={styles.tableCell}>
-                    <div style={styles.actionButtons}>
-                      <button
-                        style={styles.viewButton}
-                        onClick={() => navigate(`/operator/bookings/${booking.bookingID || booking.id}`)}
-                        title="View Details"
-                      >
-                        👁️
-                      </button>
-                      
-                      <button
-                        style={styles.printButton}
-                        onClick={() => handlePrintTicket(booking.bookingID || booking.id)}
-                        title="Print Ticket"
-                      >
-                        🖨️
-                      </button>
-                      
-                      {booking.status?.toLowerCase() === 'pending' && (
-                        <button
-                          style={styles.confirmButton}
-                          onClick={() => handleUpdateStatus(booking.bookingID || booking.id, 'confirmed')}
-                          title="Confirm Booking"
-                        >
-                          ✓
-                        </button>
-                      )}
-                      
-                      {booking.status?.toLowerCase() === 'confirmed' && (
-                        <button
-                          style={styles.completeButton}
-                          onClick={() => handleUpdateStatus(booking.bookingID || booking.id, 'completed')}
-                          title="Mark Completed"
-                        >
-                          ✅
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            <div style={styles.statInfo}>
+              <p style={styles.statLabel}>Today's Bookings</p>
+              <p style={styles.statValue}>{stats.todayBookings || 0}</p>
+            </div>
           </div>
-        )}
+          
+          <div style={styles.statCard}>
+            <div style={{...styles.statIcon, background: '#d1fae5'}}>
+              <span style={styles.statIconText}>💰</span>
+            </div>
+            <div style={styles.statInfo}>
+              <p style={styles.statLabel}>Total Revenue</p>
+              <p style={styles.statValue}>KSh {(stats.totalRevenue || 0).toLocaleString()}</p>
+            </div>
+          </div>
+          
+          <div style={styles.statCard}>
+            <div style={{...styles.statIcon, background: '#fed7aa'}}>
+              <span style={styles.statIconText}>⏳</span>
+            </div>
+            <div style={styles.statInfo}>
+              <p style={styles.statLabel}>Pending Payments</p>
+              <p style={styles.statValue}>KSh {(stats.pendingPayments || 0).toLocaleString()}</p>
+            </div>
+          </div>
+          
+          <div style={styles.statCard}>
+            <div style={{...styles.statIcon, background: '#e0e7ff'}}>
+              <span style={styles.statIconText}>🪑</span>
+            </div>
+            <div style={styles.statInfo}>
+              <p style={styles.statLabel}>Available Seats</p>
+              <p style={styles.statValue}>{stats.availableSeats || 0}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={styles.quickActionsSection}>
+          <h2 style={styles.sectionTitle}>Quick Actions</h2>
+          <div style={styles.actionsGrid}>
+            <button 
+              onClick={() => navigate('/operator/book')}
+              style={styles.actionCard}
+            >
+              <div style={styles.actionIcon}>➕</div>
+              <h3 style={styles.actionTitle}>New Booking</h3>
+              <p style={styles.actionDesc}>Book for a customer</p>
+            </button>
+            
+            <button 
+              onClick={handleGenerateReport}
+              style={styles.actionCard}
+            >
+              <div style={styles.actionIcon}>📊</div>
+              <h3 style={styles.actionTitle}>Daily Report</h3>
+              <p style={styles.actionDesc}>Generate sales report</p>
+            </button>
+            
+            <button 
+              onClick={() => navigate('/operator/bookings')}
+              style={styles.actionCard}
+            >
+              <div style={styles.actionIcon}>👥</div>
+              <h3 style={styles.actionTitle}>All Bookings</h3>
+              <p style={styles.actionDesc}>View all customer bookings</p>
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Bookings */}
+        <div>
+          <div style={styles.recentHeader}>
+            <h2 style={styles.sectionTitle}>Recent Bookings</h2>
+            <button 
+              onClick={() => navigate('/operator/bookings')}
+              style={styles.seeAllButton}
+            >
+              See All →
+            </button>
+          </div>
+          
+          {recentBookings.length === 0 ? (
+            <div style={styles.emptyState}>
+              <p style={styles.emptyText}>No recent bookings</p>
+            </div>
+          ) : (
+            <div style={styles.tableContainer}>
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Booking ID</th>
+                      <th style={styles.th}>Customer</th>
+                      <th style={styles.th}>Route</th>
+                      <th style={styles.th}>Seats</th>
+                      <th style={styles.th}>Amount</th>
+                      <th style={styles.th}>Time</th>
+                      <th style={styles.th}>Status</th>
+                      <th style={styles.th}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentBookings.map(booking => {
+                      const statusStyle = getStatusStyle(booking.status)
+                      const bookingId = booking.bookingID || booking.id
+                      const canCancel = canCancelBooking(booking)
+                      const isLoading = actionLoading === `${bookingId}_status` || actionLoading === `${bookingId}_cancel` || actionLoading === `${bookingId}_print`
+                      
+                      return (
+                        <tr key={bookingId} style={styles.tableRow}>
+                          <td style={styles.td}>
+                            <span style={styles.bookingId}>
+                              {booking.bookingReference || `ER${bookingId}`}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <div>
+                              <div style={styles.customerNameText}>
+                                {booking.customerName || booking.customer}
+                              </div>
+                              <div style={styles.customerPhoneText}>
+                                {booking.customerPhone || booking.phone}
+                              </div>
+                            </div>
+                          </td>
+                          <td style={styles.td}>
+                            {booking.route || `${booking.origin || ''} → ${booking.destination || ''}`}
+                          </td>
+                          <td style={styles.td}>
+                            {booking.seatNumbers?.join(', ') || booking.seats || booking.seatNumber || 'N/A'}
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.amountText}>
+                              KSh {(booking.totalAmount || booking.amount || 0).toLocaleString()}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            {formatDateTime(booking.createdAt || booking.bookingDate || booking.travelDate)}
+                          </td>
+                          <td style={styles.td}>
+                            <span style={{...styles.statusBadge, ...statusStyle}}>
+                              {booking.status || 'pending'}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <div style={styles.actionIcons}>
+                              <button
+                                onClick={() => handleViewDetails(bookingId)}
+                                style={styles.iconButton}
+                                title="View Details"
+                                disabled={isLoading}
+                              >
+                                👁️
+                              </button>
+                              <button
+                                onClick={() => handlePrintTicket(bookingId)}
+                                style={styles.iconButton}
+                                title="Print Ticket"
+                                disabled={isLoading}
+                              >
+                                {actionLoading === `${bookingId}_print` ? '⏳' : '🖨️'}
+                              </button>
+                              {(booking.status?.toLowerCase() === 'pending') && (
+                                <button
+                                  onClick={() => handleUpdateStatus(bookingId, 'confirmed')}
+                                  style={styles.confirmButton}
+                                  title="Confirm Booking"
+                                  disabled={isLoading}
+                                >
+                                  {actionLoading === `${bookingId}_status` ? '⏳' : '✓'}
+                                </button>
+                              )}
+                              {(booking.status?.toLowerCase() === 'confirmed') && (
+                                <button
+                                  onClick={() => handleUpdateStatus(bookingId, 'completed')}
+                                  style={styles.completeButton}
+                                  title="Mark Completed"
+                                  disabled={isLoading}
+                                >
+                                  {actionLoading === `${bookingId}_status` ? '⏳' : '✅'}
+                                </button>
+                              )}
+                              {(booking.status?.toLowerCase() === 'pending' || booking.status?.toLowerCase() === 'confirmed') && (
+                                <button
+                                  onClick={() => handleCancelBooking(bookingId)}
+                                  style={{
+                                    ...styles.cancelButton,
+                                    opacity: !canCancel ? 0.6 : 1,
+                                    cursor: (!canCancel || isLoading) ? 'not-allowed' : 'pointer'
+                                  }}
+                                  title={!canCancel ? 'Cannot cancel - less than 30 minutes to departure' : 'Cancel Booking'}
+                                  disabled={!canCancel || isLoading}
+                                >
+                                  {actionLoading === `${bookingId}_cancel` ? '⏳' : '✕'}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-// ============================
-// STYLES
-// ============================
-
 const styles = {
   container: {
-    padding: '30px',
-    backgroundColor: '#f8fafc',
     minHeight: '100vh',
-    maxWidth: '1400px',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
+    padding: '2rem 1rem',
+  },
+  contentWrapper: {
+    maxWidth: '1280px',
     margin: '0 auto',
   },
   loadingContainer: {
-    height: '100vh',
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6)',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loadingSpinner: {
-    width: '50px',
-    height: '50px',
-    border: '5px solid #f3f3f3',
-    borderTop: '5px solid #3b82f6',
+  loadingContent: {
+    textAlign: 'center',
+  },
+  spinner: {
+    width: '4rem',
+    height: '4rem',
+    border: '4px solid #fbbf24',
+    borderTopColor: '#f59e0b',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
-    marginBottom: '20px',
+    margin: '0 auto 1rem',
   },
   loadingText: {
-    color: '#666',
-  },
-  errorContainer: {
-    maxWidth: '400px',
-    margin: '100px auto',
-    textAlign: 'center',
-    backgroundColor: 'white',
-    padding: '40px',
-    borderRadius: '15px',
-    boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-  },
-  errorIcon: {
-    fontSize: '60px',
-    marginBottom: '20px',
-  },
-  errorTitle: {
-    fontSize: '24px',
-    fontWeight: '600',
-    marginBottom: '10px',
-    color: '#333',
-  },
-  errorText: {
-    color: '#666',
-    marginBottom: '30px',
-  },
-  retryButton: {
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    padding: '12px 30px',
-    borderRadius: '8px',
-    border: 'none',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  header: {
-    marginBottom: '40px',
-  },
-  title: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: '5px',
-  },
-  subtitle: {
-    fontSize: '16px',
-    color: '#64748b',
-    marginBottom: '5px',
-  },
-  shiftInfo: {
-    fontSize: '14px',
-    color: '#3b82f6',
+    color: '#78350f',
+    fontSize: '1.125rem',
     fontWeight: '500',
   },
-  headerActions: {
-    marginTop: '20px',
+  errorContainer: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6)',
     display: 'flex',
-    gap: '15px',
-    flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1rem',
+  },
+  errorCard: {
+    background: 'white',
+    borderRadius: '1rem',
+    padding: '2rem',
+    maxWidth: '28rem',
+    textAlign: 'center',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+  },
+  errorIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem',
+  },
+  errorTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 'bold',
+    color: '#78350f',
+    marginBottom: '0.5rem',
+  },
+  errorMessage: {
+    color: '#92400e',
+    marginBottom: '1.5rem',
+  },
+  retryButton: {
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    color: 'white',
+    padding: '0.5rem 1.5rem',
+    borderRadius: '0.5rem',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '2rem',
+  },
+  headerIcon: {
+    fontSize: '3rem',
+    marginBottom: '0.5rem',
+    animation: 'bounce 1s ease infinite',
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    background: 'linear-gradient(135deg, #d97706, #f59e0b, #fbbf24)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '0.5rem',
+  },
+  subtitle: {
+    color: '#92400e',
+    fontSize: '1rem',
+  },
+  shiftBadge: {
+    display: 'inline-block',
+    marginTop: '0.5rem',
+    padding: '0.25rem 0.75rem',
+    background: '#fed7aa',
+    color: '#92400e',
+    borderRadius: '2rem',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+  },
+  searchContainer: {
+    marginBottom: '2rem',
     position: 'relative',
   },
-  searchBox: {
+  searchWrapper: {
     display: 'flex',
-    gap: '10px',
-    flex: 1,
-    minWidth: '300px',
+    gap: '0.75rem',
+    marginBottom: '1rem',
   },
   searchInput: {
     flex: 1,
-    padding: '12px 15px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '14px',
+    padding: '0.75rem 1rem',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    outline: 'none',
+    transition: 'all 0.3s',
+    background: '#fffbef',
+    color: '#78350f',
   },
   searchButton: {
-    padding: '12px 20px',
-    backgroundColor: '#3b82f6',
+    padding: '0.75rem 1.5rem',
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
-    fontWeight: '600',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
     cursor: 'pointer',
+    transition: 'all 0.3s',
   },
-  searchResult: {
+  actionButtons: {
+    display: 'flex',
+    gap: '0.75rem',
+  },
+  quickBookButton: {
+    flex: 1,
+    padding: '0.75rem',
+    background: 'linear-gradient(135deg, #10b981, #34d399)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+  },
+  allBookingsButton: {
+    flex: 1,
+    padding: '0.75rem',
+    background: 'white',
+    color: '#f59e0b',
+    border: '1px solid #f59e0b',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+  },
+  searchResultPopup: {
     position: 'absolute',
     top: '100%',
     left: 0,
     right: 0,
-    backgroundColor: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '15px',
-    marginTop: '5px',
-    boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-    zIndex: 1000,
+    background: 'white',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
+    padding: '1rem',
+    marginTop: '0.5rem',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    zIndex: 10,
   },
-  notFound: {
-    color: '#ef4444',
-    margin: 0,
+  notFoundText: {
+    color: '#dc2626',
   },
-  resultName: {
+  customerName: {
     fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: '3px',
+    color: '#78350f',
   },
-  resultPhone: {
-    fontSize: '13px',
-    color: '#64748b',
-    marginBottom: '8px',
+  customerPhone: {
+    fontSize: '0.75rem',
+    color: '#b45309',
+    marginTop: '0.25rem',
   },
-  resultAction: {
-    backgroundColor: 'transparent',
+  bookForCustomerButton: {
+    marginTop: '0.5rem',
+    color: '#f59e0b',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+    background: 'none',
     border: 'none',
-    color: '#3b82f6',
-    fontWeight: '600',
     cursor: 'pointer',
-    padding: 0,
   },
-  closeResult: {
-    backgroundColor: 'transparent',
+  closeButton: {
+    background: 'none',
     border: 'none',
-    fontSize: '18px',
+    color: '#9ca3af',
     cursor: 'pointer',
-    color: '#64748b',
-  },
-  quickBookButton: {
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    padding: '12px 24px',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  viewAllButton: {
-    backgroundColor: 'white',
-    color: '#3b82f6',
-    padding: '12px 24px',
-    border: '2px solid #3b82f6',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
+    fontSize: '1rem',
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '20px',
-    marginBottom: '40px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '1rem',
+    marginBottom: '2rem',
   },
   statCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '25px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    background: 'white',
+    borderRadius: '1rem',
+    padding: '1.25rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
+    gap: '1rem',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+    transition: 'all 0.3s',
   },
   statIcon: {
-    fontSize: '40px',
-    width: '70px',
-    height: '70px',
-    borderRadius: '12px',
+    width: '3rem',
+    height: '3rem',
+    borderRadius: '0.75rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statContent: {
+  statIconText: {
+    fontSize: '1.5rem',
+  },
+  statInfo: {
     flex: 1,
   },
-  statValue: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    margin: 0,
-    color: '#1f2937',
-  },
   statLabel: {
-    fontSize: '14px',
-    color: '#6b7280',
-    margin: 0,
+    fontSize: '0.75rem',
+    color: '#b45309',
+    marginBottom: '0.25rem',
   },
-  section: {
-    marginBottom: '40px',
+  statValue: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: '#78350f',
   },
-  sectionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
+  quickActionsSection: {
+    marginBottom: '2rem',
   },
   sectionTitle: {
-    fontSize: '24px',
+    fontSize: '1.25rem',
     fontWeight: '600',
-    color: '#1f2937',
-  },
-  seeAllButton: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    color: '#3b82f6',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
+    color: '#78350f',
+    marginBottom: '1rem',
   },
   actionsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
+    gap: '1rem',
   },
   actionCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '25px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    border: 'none',
-    cursor: 'pointer',
+    background: 'white',
+    borderRadius: '1rem',
+    padding: '1.5rem',
     textAlign: 'center',
-    transition: 'transform 0.2s',
-    ':hover': {
-      transform: 'translateY(-2px)',
-    },
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    border: '2px solid transparent',
   },
   actionIcon: {
-    fontSize: '40px',
-    marginBottom: '15px',
+    fontSize: '2rem',
+    marginBottom: '0.75rem',
   },
   actionTitle: {
-    fontSize: '18px',
+    fontSize: '1rem',
     fontWeight: '600',
-    marginBottom: '8px',
-    color: '#1f2937',
+    color: '#78350f',
+    marginBottom: '0.25rem',
   },
   actionDesc: {
-    fontSize: '14px',
-    color: '#6b7280',
-    margin: 0,
+    fontSize: '0.75rem',
+    color: '#b45309',
+  },
+  recentHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1rem',
+  },
+  seeAllButton: {
+    color: '#f59e0b',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: '500',
   },
   emptyState: {
-    backgroundColor: 'white',
-    padding: '40px',
-    borderRadius: '12px',
+    background: 'white',
+    borderRadius: '1rem',
+    padding: '3rem',
     textAlign: 'center',
   },
   emptyText: {
-    color: '#94a3b8',
-    fontSize: '16px',
+    color: '#b45309',
   },
-  bookingsTable: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
+  tableContainer: {
+    background: 'white',
+    borderRadius: '1rem',
     overflow: 'hidden',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
   },
-  tableHeader: {
-    display: 'grid',
-    gridTemplateColumns: '1.2fr 1.5fr 1.5fr 1fr 1fr 1.2fr 1fr 1fr',
-    backgroundColor: '#f8fafc',
-    padding: '15px 20px',
-    borderBottom: '1px solid #e5e7eb',
+  tableWrapper: {
+    overflowX: 'auto',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+  },
+  th: {
+    padding: '1rem',
+    textAlign: 'left',
+    fontSize: '0.75rem',
     fontWeight: '600',
-    color: '#374151',
-    fontSize: '14px',
+    color: '#b45309',
+    textTransform: 'uppercase',
+    borderBottom: '1px solid #fed7aa',
+  },
+  td: {
+    padding: '1rem',
+    fontSize: '0.875rem',
+    color: '#78350f',
+    borderBottom: '1px solid #fed7aa',
   },
   tableRow: {
-    display: 'grid',
-    gridTemplateColumns: '1.2fr 1.5fr 1.5fr 1fr 1fr 1.2fr 1fr 1fr',
-    padding: '15px 20px',
-    borderBottom: '1px solid #f3f4f6',
-    alignItems: 'center',
-    ':hover': {
-      backgroundColor: '#f8fafc',
-    },
-  },
-  tableCell: {
-    padding: '0 8px',
+    transition: 'background 0.3s',
   },
   bookingId: {
+    color: '#f59e0b',
     fontWeight: '600',
-    color: '#3b82f6',
-    fontSize: '13px',
   },
-  customerInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  customerName: {
+  customerNameText: {
     fontWeight: '500',
-    color: '#1f2937',
-    fontSize: '14px',
+    color: '#78350f',
   },
-  customerPhone: {
-    fontSize: '12px',
-    color: '#6b7280',
+  customerPhoneText: {
+    fontSize: '0.75rem',
+    color: '#b45309',
+    marginTop: '0.25rem',
+  },
+  amountText: {
+    fontWeight: '600',
+    color: '#d97706',
   },
   statusBadge: {
     display: 'inline-block',
-    padding: '4px 10px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: '600',
-    textTransform: 'capitalize',
+    padding: '0.25rem 0.75rem',
+    borderRadius: '2rem',
+    fontSize: '0.75rem',
+    fontWeight: '500',
   },
-  actionButtons: {
+  actionIcons: {
     display: 'flex',
-    gap: '5px',
+    gap: '0.5rem',
   },
-  viewButton: {
-    padding: '6px 8px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
+  iconButton: {
+    width: '2rem',
+    height: '2rem',
+    background: '#f3f4f6',
     border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
+    borderRadius: '0.5rem',
     cursor: 'pointer',
-  },
-  printButton: {
-    padding: '6px 8px',
-    backgroundColor: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
-    cursor: 'pointer',
+    fontSize: '1rem',
+    transition: 'all 0.3s',
   },
   confirmButton: {
-    padding: '6px 8px',
-    backgroundColor: '#8b5cf6',
-    color: 'white',
+    width: '2rem',
+    height: '2rem',
+    background: '#d1fae5',
     border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
+    borderRadius: '0.5rem',
     cursor: 'pointer',
+    fontSize: '1rem',
+    color: '#065f46',
+    transition: 'all 0.3s',
   },
   completeButton: {
-    padding: '6px 8px',
-    backgroundColor: '#f59e0b',
-    color: 'white',
+    width: '2rem',
+    height: '2rem',
+    background: '#e0e7ff',
     border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
+    borderRadius: '0.5rem',
     cursor: 'pointer',
+    fontSize: '1rem',
+    color: '#3730a3',
+    transition: 'all 0.3s',
+  },
+  cancelButton: {
+    width: '2rem',
+    height: '2rem',
+    background: '#fee2e2',
+    border: 'none',
+    borderRadius: '0.5rem',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    color: '#991b1b',
+    transition: 'all 0.3s',
   },
 }
 
-// Add keyframes for spinner animation
-const style = document.createElement('style')
-style.textContent = `
+// Add animations
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
   }
-`
-document.head.appendChild(style)
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default OperatorDashboard

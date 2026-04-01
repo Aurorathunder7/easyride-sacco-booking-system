@@ -90,29 +90,18 @@ function App() {
             </>
           } />
           
-          {/* 404 Page */}
+          {/* 404 Page - Updated to match theme */}
           <Route path="*" element={
-            <div style={{
-              height: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              backgroundColor: '#f8fafc'
-            }}>
-              <h1 style={{ fontSize: '48px', color: '#3b82f6', marginBottom: '20px' }}>404</h1>
-              <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>Page not found</p>
-              <a href="/" style={{
-                padding: '12px 24px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontWeight: '600'
-              }}>
-                Return to Home
-              </a>
+            <div style={styles.notFoundContainer}>
+              <div style={styles.notFoundCard}>
+                <div style={styles.notFoundIcon}>🚌</div>
+                <h1 style={styles.notFoundTitle}>404</h1>
+                <p style={styles.notFoundMessage}>Oops! Page not found</p>
+                <p style={styles.notFoundSubMessage}>The page you're looking for doesn't exist or has been moved.</p>
+                <a href="/" style={styles.notFoundButton}>
+                  ← Return to Home
+                </a>
+              </div>
             </div>
           } />
         </Routes>
@@ -120,5 +109,88 @@ function App() {
     </Router>
   )
 }
+
+// ============================
+// STYLES - Warm Cream/Amber Theme
+// ============================
+const styles = {
+  notFoundContainer: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
+    padding: '20px',
+  },
+  notFoundCard: {
+    backgroundColor: 'white',
+    borderRadius: '1rem',
+    padding: '2.5rem',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02)',
+    width: '100%',
+    maxWidth: '450px',
+    textAlign: 'center',
+    border: '1px solid #fed7aa',
+    animation: 'slideIn 0.5s ease-out',
+  },
+  notFoundIcon: {
+    fontSize: '4rem',
+    marginBottom: '1rem',
+    animation: 'bounce 1s ease infinite',
+  },
+  notFoundTitle: {
+    fontSize: '4rem',
+    fontWeight: 'bold',
+    background: 'linear-gradient(135deg, #d97706, #f59e0b, #fbbf24)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '0.5rem',
+  },
+  notFoundMessage: {
+    fontSize: '1.25rem',
+    fontWeight: '600',
+    color: '#78350f',
+    marginBottom: '0.5rem',
+  },
+  notFoundSubMessage: {
+    fontSize: '0.875rem',
+    color: '#92400e',
+    marginBottom: '1.5rem',
+  },
+  notFoundButton: {
+    display: 'inline-block',
+    background: 'linear-gradient(135deg, #059669, #10b981)',
+    color: 'white',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '0.75rem',
+    textDecoration: 'none',
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    transition: 'all 0.3s',
+  },
+}
+
+// Add keyframes for animations
+const style = document.createElement('style')
+style.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+`
+document.head.appendChild(style)
 
 export default App

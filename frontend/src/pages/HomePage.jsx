@@ -47,7 +47,7 @@ function HomePage() {
   }
 
   return (
-    // Main container with light gray background
+    // Main container with cream gradient background
     <div style={styles.container}>
       <Hero />
       {/* Search Section - floating card with search form */}
@@ -94,6 +94,7 @@ function HomePage() {
                     name="date"
                     value={searchData.date}
                     onChange={handleSearchChange}
+                    min={new Date().toISOString().split('T')[0]}
                     style={styles.input}
                   />
                 </div>
@@ -110,11 +111,6 @@ function HomePage() {
         </div>
       </div>
 
-
-
-
-
-      
       {/* Popular Routes Section */}
       <div style={styles.section}>
         <div className="container">
@@ -124,9 +120,9 @@ function HomePage() {
             {/* Map through popularRoutes array to create cards */}
             {popularRoutes.map((route) => (
               <div 
-                key={route.id} // Unique key for React rendering
+                key={route.id}
                 style={styles.routeCard}
-                onClick={() => handleRouteClick(route)} // Navigate to booking on click
+                onClick={() => handleRouteClick(route)}
               >
                 {/* Route header with origin, destination and duration */}
                 <div style={styles.routeHeader}>
@@ -151,12 +147,6 @@ function HomePage() {
         </div>
       </div>
 
-
-
-
-
-
-      
       {/* How It Works Section - explains the booking process */}
       <div style={styles.howItWorks}>
         <div className="container">
@@ -188,11 +178,12 @@ function HomePage() {
   )
 }
 
-// STYLES
+// STYLES - Warm Cream/Amber Theme
 const styles = {
   // Main container
   container: {
-    backgroundColor: '#f5f5f5',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
+    minHeight: '100vh',
   },
   // Search container
   searchContainer: {
@@ -202,12 +193,13 @@ const styles = {
   // Search card
   searchCard: {
     backgroundColor: 'white',
-    borderRadius: '15px',
+    borderRadius: '1rem',
     padding: '30px',
-    boxShadow: '0 5px 20px rgba(0,0,0,0.1)',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02)',
     marginTop: '-50px',
     position: 'relative',
     zIndex: 10,
+    border: '1px solid #fed7aa',
   },
   // Search title
   searchTitle: {
@@ -215,7 +207,7 @@ const styles = {
     fontWeight: 'bold',
     marginBottom: '20px',
     textAlign: 'center',
-    color: '#333',
+    color: '#78350f',
   },
   // Search form container
   searchForm: {
@@ -238,14 +230,18 @@ const styles = {
   label: {
     marginBottom: '8px',
     fontWeight: '500',
-    color: '#555',
+    color: '#b45309',
   },
   // Input fields
   input: {
     padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
     fontSize: '16px',
+    backgroundColor: '#fffbef',
+    transition: 'all 0.3s',
+    outline: 'none',
+    color: '#78350f',
   },
   // Search button container
   searchButtonContainer: {
@@ -253,14 +249,15 @@ const styles = {
   },
   // Search button
   searchButton: {
-    backgroundColor: '#3b82f6',
+    background: 'linear-gradient(135deg, #059669, #10b981)',
     color: 'white',
     padding: '15px 30px',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '0.75rem',
     fontSize: '16px',
     fontWeight: '600',
     cursor: 'pointer',
+    transition: 'all 0.3s',
   },
   // Section container
   section: {
@@ -272,27 +269,28 @@ const styles = {
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: '40px',
-    color: '#333',
+    color: '#78350f',
   },
   // Grid layout for popular routes
   routesGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '20px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px',
   },
   // Individual route card
   routeCard: {
     backgroundColor: 'white',
-    borderRadius: '10px',
+    borderRadius: '1rem',
     padding: '20px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
     cursor: 'pointer',
-    transition: 'transform 0.3s',
+    transition: 'transform 0.3s, box-shadow 0.3s',
+    border: '1px solid #fed7aa',
   },
 
-
-
-  
   // Route header container
   routeHeader: {
     marginBottom: '20px',
@@ -302,53 +300,53 @@ const styles = {
     fontSize: '18px',
     fontWeight: '600',
     marginBottom: '5px',
+    color: '#78350f',
   },
   // Journey duration
   duration: {
     fontSize: '14px',
-    color: '#666',        // Medium gray
+    color: '#92400e',
   },
   // Route footer with price and button
   routeFooter: {
     display: 'flex',
-    justifyContent: 'space-between', // Price left, button right
-    alignItems: 'center', // Vertically center
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   // Price container
   price: {
     display: 'flex',
-    flexDirection: 'column', // "From" above the actual price
+    flexDirection: 'column',
   },
   // "From" label
   priceLabel: {
     fontSize: '12px',
-    color: '#666',        // Medium gray
+    color: '#b45309',
   },
   // Price value
   priceValue: {
     fontSize: '24px',
     fontWeight: 'bold',
-    color: '#3b82f6',     // Blue
+    color: '#d97706',
   },
   // Book now button
   bookButton: {
-    backgroundColor: '#3b82f6', // Blue
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     color: 'white',
     padding: '10px 20px',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '0.5rem',
     fontWeight: '600',
-    cursor: 'pointer',    // Hand cursor on hover
+    cursor: 'pointer',
+    transition: 'all 0.3s',
   },
-
-
-
-
 
   // How it works section
   howItWorks: {
     backgroundColor: 'white',
     padding: '50px 0',
+    borderTop: '1px solid #fed7aa',
+    borderBottom: '1px solid #fed7aa',
   },
   // Steps container
   steps: {
@@ -356,6 +354,9 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '30px',
     textAlign: 'center',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px',
   },
   // Individual step
   step: {
@@ -365,9 +366,9 @@ const styles = {
   stepNumber: {
     width: '50px',
     height: '50px',
-    backgroundColor: '#3b82f6',
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     color: 'white',
-    borderRadius: '50%',  // Makes it circular
+    borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -380,11 +381,45 @@ const styles = {
     fontSize: '20px',
     fontWeight: '600',
     marginBottom: '10px',
+    color: '#78350f',
   },
   // Step description text
   stepText: {
-    color: '#666',
+    color: '#92400e',
     lineHeight: 1.6,
   },
 }
+
+// Add hover effects
+const addStyles = () => {
+  const style = document.createElement('style')
+  style.textContent = `
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    .search-button:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+    }
+    .book-button:hover {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+    }
+    .route-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+    input:focus {
+      border-color: #f59e0b;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+  `
+  document.head.appendChild(style)
+}
+
+// Initialize styles
+if (typeof window !== 'undefined') {
+  addStyles()
+}
+
 export default HomePage

@@ -6,8 +6,15 @@ const credentials = {
     username: process.env.AT_USERNAME || 'sandbox'
 };
 
-const at = africastalking(credentials);
-const sms = at.SMS;
+let at;
+try {
+    at = africastalking(credentials);
+    console.log('✅ Africa\'s Talking initialized');
+} catch (error) {
+    console.error('❌ Failed to initialize Africa\'s Talking:', error.message);
+}
+
+const sms = at ? at.SMS : null;
 
 class SMSService {
     /**
@@ -15,6 +22,18 @@ class SMSService {
      */
     async sendSMS(phoneNumber, message) {
         try {
+            if (!sms) {
+                console.log('⚠️ SMS service not initialized, logging message only');
+                console.log('📱 SMS would be sent to:', phoneNumber);
+                console.log('📝 Message:', message);
+                return {
+                    success: true,
+                    messageId: 'SIMULATED_' + Date.now(),
+                    status: 'simulated',
+                    isSimulation: true
+                };
+            }
+            
             // Format phone number (remove any non-digits and ensure it's in international format)
             const formattedNumber = this.formatPhoneNumber(phoneNumber);
             
@@ -24,7 +43,7 @@ class SMSService {
                 from: process.env.AT_SENDER_ID || 'EASY-RIDE'
             };
 
-            console.log(`📤 Sending SMS to ${formattedNumber}: ${message}`);
+            console.log(`📤 Sending SMS to ${formattedNumber}`);
 
             const response = await sms.send(options);
             
@@ -33,12 +52,17 @@ class SMSService {
             return {
                 success: true,
                 messageId: response.SMSMessageData?.Recipients?.[0]?.messageId,
-                status: response.SMSMessageData?.Recipients?.[0]?.status
+                status: response.SMSMessageData?.Recipients?.[0]?.status,
+                isSimulation: false
             };
 
         } catch (error) {
             console.error('❌ SMS sending error:', error);
-            throw new Error('Failed to send SMS');
+            return {
+                success: false,
+                error: error.message,
+                isSimulation: false
+            };
         }
     }
 
@@ -47,6 +71,11 @@ class SMSService {
      */
     async sendBulkSMS(phoneNumbers, message) {
         try {
+            if (!sms) {
+                console.log('⚠️ SMS service not initialized');
+                return { success: true, isSimulation: true };
+            }
+            
             const formattedNumbers = phoneNumbers.map(num => this.formatPhoneNumber(num));
             
             const options = {
@@ -61,12 +90,13 @@ class SMSService {
             
             return {
                 success: true,
-                recipients: response.SMSMessageData?.Recipients || []
+                recipients: response.SMSMessageData?.Recipients || [],
+                isSimulation: false
             };
 
         } catch (error) {
             console.error('❌ Bulk SMS error:', error);
-            throw new Error('Failed to send bulk SMS');
+            return { success: false, error: error.message };
         }
     }
 
@@ -75,15 +105,51 @@ class SMSService {
      */
     async sendBookingConfirmation(bookingDetails) {
         const message = this.formatBookingMessage(bookingDetails);
-        return this.sendSMS(bookingDetails.customerPhone, message);
+        const phoneNumber = bookingDetails.phoneNumber || bookingDetails.customerPhone;
+        return this.sendSMS(phoneNumber, message);
     }
 
     /**
-     * Send payment receipt SMS
+     * Send payment receipt SMS (updated to accept bookingId and paymentDetails)
      */
-    async sendPaymentReceipt(paymentDetails) {
-        const message = this.formatPaymentMessage(paymentDetails);
-        return this.sendSMS(paymentDetails.customerPhone, message);
+    async sendPaymentReceipt(bookingId, paymentDetails) {
+        try {
+            // Get booking details if not provided
+            let bookingInfo = paymentDetails.bookingInfo;
+            let phoneNumber = paymentDetails.customerPhone;
+            let bookingReference = paymentDetails.bookingReference;
+            
+            // If bookingId is provided, fetch from database
+            if (bookingId && (!bookingInfo || !phoneNumber)) {
+                const { pool } = require('../config/db');
+                const [booking] = await pool.query(
+                    `SELECT phoneNumber, customerName, route, travelDate, seatNumber 
+                     FROM bookings 
+                     WHERE bookingID = ?`,
+                    [bookingId]
+                );
+                
+                if (booking.length > 0) {
+                    phoneNumber = booking[0].phoneNumber;
+                    bookingInfo = booking[0];
+                }
+            }
+            
+            // Format message
+            const message = this.formatPaymentMessage({
+                mpesaReceipt: paymentDetails.mpesaReceipt,
+                amount: paymentDetails.amount,
+                transactionDate: paymentDetails.transactionDate || new Date(),
+                bookingReference: bookingReference || `ER${bookingId}`,
+                customerPhone: phoneNumber
+            });
+            
+            return this.sendSMS(phoneNumber, message);
+            
+        } catch (error) {
+            console.error('❌ Send payment receipt SMS error:', error);
+            return { success: false, error: error.message };
+        }
     }
 
     /**
@@ -91,7 +157,8 @@ class SMSService {
      */
     async sendTripReminder(bookingDetails) {
         const message = this.formatReminderMessage(bookingDetails);
-        return this.sendSMS(bookingDetails.customerPhone, message);
+        const phoneNumber = bookingDetails.phoneNumber || bookingDetails.customerPhone;
+        return this.sendSMS(phoneNumber, message);
     }
 
     /**
@@ -99,7 +166,8 @@ class SMSService {
      */
     async sendCancellationNotice(bookingDetails) {
         const message = this.formatCancellationMessage(bookingDetails);
-        return this.sendSMS(bookingDetails.customerPhone, message);
+        const phoneNumber = bookingDetails.phoneNumber || bookingDetails.customerPhone;
+        return this.sendSMS(phoneNumber, message);
     }
 
     /**
@@ -138,13 +206,24 @@ class SMSService {
      * Format booking confirmation message
      */
     formatBookingMessage(booking) {
-        return `EasyRide: Your booking from ${booking.origin} to ${booking.destination} is confirmed! 
+        // Parse route if it's a string
+        let origin = booking.origin;
+        let destination = booking.destination;
+        if (booking.route && !origin) {
+            const routeParts = booking.route.split(' → ');
+            if (routeParts.length === 2) {
+                origin = routeParts[0];
+                destination = routeParts[1];
+            }
+        }
+        
+        return `EasyRide: Your booking from ${origin || 'Nairobi'} to ${destination || 'Mombasa'} is confirmed! 
 Booking Ref: ${booking.bookingReference}
 Date: ${new Date(booking.travelDate).toLocaleDateString('en-KE')}
 Time: ${new Date(booking.travelDate).toLocaleTimeString('en-KE')}
 Seat: ${booking.seatNumber}
 Amount: KES ${booking.amount}
-Vehicle: ${booking.vehicleNumber}
+Vehicle: ${booking.vehicleNumber || 'N/A'}
 Thank you for choosing EasyRide!`;
     }
 
@@ -157,7 +236,6 @@ Receipt No: ${payment.mpesaReceipt}
 Amount: KES ${payment.amount}
 Date: ${new Date(payment.transactionDate).toLocaleString('en-KE')}
 Booking Ref: ${payment.bookingReference}
-M-Pesa Confirmation: ${payment.mpesaReceipt}
 Thank you for riding with us!`;
     }
 
@@ -165,10 +243,21 @@ Thank you for riding with us!`;
      * Format trip reminder message
      */
     formatReminderMessage(booking) {
-        return `EasyRide Reminder: Your trip from ${booking.origin} to ${booking.destination} is tomorrow at ${new Date(booking.travelDate).toLocaleTimeString('en-KE')}.
+        // Parse route if it's a string
+        let origin = booking.origin;
+        let destination = booking.destination;
+        if (booking.route && !origin) {
+            const routeParts = booking.route.split(' → ');
+            if (routeParts.length === 2) {
+                origin = routeParts[0];
+                destination = routeParts[1];
+            }
+        }
+        
+        return `EasyRide Reminder: Your trip from ${origin || 'Nairobi'} to ${destination || 'Mombasa'} is tomorrow at ${new Date(booking.travelDate).toLocaleTimeString('en-KE')}.
 Booking Ref: ${booking.bookingReference}
 Seat: ${booking.seatNumber}
-Vehicle: ${booking.vehicleNumber}
+Vehicle: ${booking.vehicleNumber || 'N/A'}
 Please arrive 30 minutes before departure.
 Safe travels!`;
     }
@@ -177,7 +266,18 @@ Safe travels!`;
      * Format cancellation notice
      */
     formatCancellationMessage(booking) {
-        return `EasyRide: Your booking from ${booking.origin} to ${booking.destination} has been cancelled.
+        // Parse route if it's a string
+        let origin = booking.origin;
+        let destination = booking.destination;
+        if (booking.route && !origin) {
+            const routeParts = booking.route.split(' → ');
+            if (routeParts.length === 2) {
+                origin = routeParts[0];
+                destination = routeParts[1];
+            }
+        }
+        
+        return `EasyRide: Your booking from ${origin || 'Nairobi'} to ${destination || 'Mombasa'} has been cancelled.
 Booking Ref: ${booking.bookingReference}
 Refund will be processed within 24 hours.
 Contact us if you have any questions.
@@ -189,6 +289,10 @@ We hope to serve you again soon!`;
      */
     async checkBalance() {
         try {
+            if (!sms) {
+                return { success: true, balance: 'Simulation - N/A', isSimulation: true };
+            }
+            
             const response = await sms.fetchBalance();
             return {
                 success: true,
@@ -196,7 +300,7 @@ We hope to serve you again soon!`;
             };
         } catch (error) {
             console.error('❌ Balance check error:', error);
-            throw new Error('Failed to check SMS balance');
+            return { success: false, error: error.message };
         }
     }
 
@@ -205,6 +309,10 @@ We hope to serve you again soon!`;
      */
     async fetchDeliveryReports() {
         try {
+            if (!sms) {
+                return { success: true, messages: [], isSimulation: true };
+            }
+            
             const response = await sms.fetchMessages();
             return {
                 success: true,
@@ -212,7 +320,66 @@ We hope to serve you again soon!`;
             };
         } catch (error) {
             console.error('❌ Fetch delivery reports error:', error);
-            throw new Error('Failed to fetch delivery reports');
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Process pending SMS from database
+     */
+    async processPendingSMS() {
+        try {
+            const { pool } = require('../config/db');
+            const [tables] = await pool.query(`SHOW TABLES LIKE 'sms_logs'`);
+            if (tables.length === 0) {
+                console.log('⚠️ sms_logs table does not exist');
+                return { processed: 0 };
+            }
+            
+            // Get pending SMS
+            const [pending] = await pool.query(
+                `SELECT * FROM sms_logs 
+                 WHERE status = 'pending' 
+                 AND retryCount < 3 
+                 ORDER BY createdAt ASC 
+                 LIMIT 10`
+            );
+            
+            let processed = 0;
+            for (const smsLog of pending) {
+                console.log(`📱 Processing pending SMS ${smsLog.smsID}`);
+                
+                const result = await this.sendSMS(smsLog.phoneNumber, smsLog.message);
+                
+                if (result.success) {
+                    await pool.query(
+                        `UPDATE sms_logs 
+                         SET status = 'sent', 
+                             providerReference = ?,
+                             sentAt = NOW()
+                         WHERE smsID = ?`,
+                        [result.messageId, smsLog.smsID]
+                    );
+                    processed++;
+                    console.log(`✅ SMS ${smsLog.smsID} sent successfully`);
+                } else {
+                    await pool.query(
+                        `UPDATE sms_logs 
+                         SET status = 'failed', 
+                             errorMessage = ?,
+                             retryCount = retryCount + 1
+                         WHERE smsID = ?`,
+                        [result.error, smsLog.smsID]
+                    );
+                    console.log(`❌ SMS ${smsLog.smsID} failed: ${result.error}`);
+                }
+            }
+            
+            return { processed };
+
+        } catch (error) {
+            console.error('❌ Error processing pending SMS:', error);
+            return { error: error.message };
         }
     }
 }

@@ -9,17 +9,11 @@ function BookingPage() {
   const location = useLocation()
   const navigate = useNavigate()
   
-  // ============================
-  // STATE MANAGEMENT
-  // ============================
-  
-  // Data from database
+  // State Management
   const [routes, setRoutes] = useState([])
   const [schedules, setSchedules] = useState([])
-  const [vehicles, setVehicles] = useState([])
   const [seats, setSeats] = useState([])
   
-  // UI State
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedRoute, setSelectedRoute] = useState(null)
@@ -27,7 +21,12 @@ function BookingPage() {
   const [selectedSeats, setSelectedSeats] = useState([])
   const [availableSeats, setAvailableSeats] = useState([])
   
-  // Passenger details
+  // Add date picker state - allow today
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Allow today as default
+    return new Date().toISOString().split('T')[0]
+  })
+  
   const [passengerDetails, setPassengerDetails] = useState({
     name: '',
     phone: '',
@@ -35,19 +34,67 @@ function BookingPage() {
     idNumber: ''
   })
   
-  // M-Pesa payment state
   const [processingPayment, setProcessingPayment] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState(null)
+  const [activeStep, setActiveStep] = useState(1)
+  const [bookingReference, setBookingReference] = useState(null)
+  const [pollingInterval, setPollingInterval] = useState(null)
 
-  // ============================
-  // EFFECTS
-  // ============================
+  const steps = [
+    { number: 1, title: 'Route', icon: '🛣️', color: '#2563eb' },
+    { number: 2, title: 'Date & Schedule', icon: '📅', color: '#7c3aed' },
+    { number: 3, title: 'Seats', icon: '💺', color: '#059669' },
+    { number: 4, title: 'Details', icon: '👤', color: '#ea580c' },
+    { number: 5, title: 'Pay', icon: '💰', color: '#4f46e5' }
+  ]
+
+  // Helper functions for schedule availability
+  const isScheduleAvailable = (schedule) => {
+    if (!schedule) return false
+    
+    const now = new Date()
+    const departureTime = new Date(schedule.departureTime)
+    
+    // If the date is today, check if departure time has passed
+    const isToday = departureTime.toDateString() === now.toDateString()
+    if (isToday && departureTime < now) {
+      return false
+    }
+    return true
+  }
   
-  // Load initial data on mount
+  const getScheduleStatus = (schedule) => {
+    const now = new Date()
+    const departureTime = new Date(schedule.departureTime)
+    const isToday = departureTime.toDateString() === now.toDateString()
+    
+    if (isToday && departureTime > now) {
+      const minutesUntil = Math.floor((departureTime - now) / (1000 * 60))
+      if (minutesUntil < 30) {
+        return { text: `⏰ Departs in ${minutesUntil} mins`, color: '#f59e0b' }
+      }
+      return { text: '🟢 Available today', color: '#10b981' }
+    } else if (isToday && departureTime < now) {
+      return { text: '⏰ Departed', color: '#ef4444' }
+    }
+    return { text: '📅 Future booking', color: '#3b82f6' }
+  }
+
+  // Get min date (today) and max date (30 days from now)
+  const getMinDate = () => {
+    // Allow today
+    return new Date().toISOString().split('T')[0]
+  }
+  
+  const getMaxDate = () => {
+    const maxDate = new Date()
+    maxDate.setDate(maxDate.getDate() + 30)
+    return maxDate.toISOString().split('T')[0]
+  }
+
   useEffect(() => {
     fetchInitialData()
     
-    // Get user from localStorage for pre-filling
     const userStr = localStorage.getItem('user')
     if (userStr) {
       try {
@@ -62,114 +109,121 @@ function BookingPage() {
         console.error('Error parsing user data:', error)
       }
     }
+
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
   }, [])
 
-  // Fetch schedules when route is selected
   useEffect(() => {
-    if (selectedRoute) {
-      fetchSchedulesForRoute(selectedRoute.routeID)
+    if (selectedRoute && selectedDate) {
+      fetchSchedulesForRoute(selectedRoute.routeID, selectedDate)
+      setActiveStep(2)
     }
-  }, [selectedRoute])
+  }, [selectedRoute, selectedDate])
 
-  // Fetch seat availability when schedule is selected
   useEffect(() => {
     if (selectedSchedule) {
-      fetchSeatAvailability(selectedSchedule.scheduleID)
+      fetchSeatAvailability(selectedSchedule)
+      setActiveStep(3)
     }
   }, [selectedSchedule])
 
-  // ============================
-  // API FUNCTIONS
-  // ============================
-  
-  /**
-   * Fetch initial data (routes and vehicles)
-   */
+  useEffect(() => {
+    if (selectedSeats.length > 0) {
+      setActiveStep(4)
+    }
+  }, [selectedSeats])
+
+  useEffect(() => {
+    if (passengerDetails.name && passengerDetails.phone && selectedSeats.length > 0) {
+      setActiveStep(5)
+    }
+  }, [passengerDetails, selectedSeats])
+
   const fetchInitialData = async () => {
     setLoading(true)
     setError(null)
     
     try {
       const token = localStorage.getItem('token')
-      
       if (!token) {
         navigate('/login')
         return
       }
       
-      console.log('📡 Fetching routes and vehicles...')
-      
-      // Fetch routes
-      const routesResponse = await fetch(`${API_BASE_URL}/routes`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/routes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
-      if (!routesResponse.ok) throw new Error('Failed to fetch routes')
-      const routesData = await routesResponse.json()
-      setRoutes(routesData.routes || [])
+      if (!response.ok) throw new Error('Failed to fetch routes')
       
-      // Fetch vehicles
-      const vehiclesResponse = await fetch(`${API_BASE_URL}/vehicles`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!vehiclesResponse.ok) throw new Error('Failed to fetch vehicles')
-      const vehiclesData = await vehiclesResponse.json()
-      setVehicles(vehiclesData.vehicles || [])
+      const data = await response.json()
+      setRoutes(data.routes || [])
       
     } catch (error) {
-      console.error('❌ Error fetching data:', error)
       setError(error.message)
     } finally {
       setLoading(false)
     }
   }
 
-  /**
-   * Fetch schedules for selected route
-   */
-  const fetchSchedulesForRoute = async (routeId) => {
+  const fetchSchedulesForRoute = async (routeId, date) => {
     setLoading(true)
-    
     try {
       const token = localStorage.getItem('token')
       
-      console.log(`📡 Fetching schedules for route ${routeId}...`)
-      
-      const response = await fetch(`${API_BASE_URL}/schedules?routeId=${routeId}`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/schedules?routeId=${routeId}&date=${date}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
       if (!response.ok) throw new Error('Failed to fetch schedules')
+      
       const data = await response.json()
-      setSchedules(data.schedules || [])
+      
+      // Filter out schedules that have already passed for today
+      let availableSchedules = data.schedules || []
+      if (date === new Date().toISOString().split('T')[0]) {
+        const now = new Date()
+        availableSchedules = availableSchedules.filter(schedule => {
+          const departureTime = new Date(schedule.departureTime)
+          return departureTime > now
+        })
+        console.log(`⏰ Filtered out past schedules for today. ${availableSchedules.length} remaining`)
+      }
+      
+      setSchedules(availableSchedules)
+      
+      // Reset selected schedule when new schedules load
+      setSelectedSchedule(null)
       
     } catch (error) {
-      console.error('❌ Error fetching schedules:', error)
       setError(error.message)
     } finally {
       setLoading(false)
     }
   }
 
-  /**
-   * Fetch seat availability for selected schedule
-   */
-  const fetchSeatAvailability = async (scheduleId) => {
+  const fetchSeatAvailability = async (schedule) => {
     try {
       const token = localStorage.getItem('token')
+      const travelDate = schedule.departureTime.split('T')[0]
       
-      console.log(`📡 Fetching seat availability for schedule ${scheduleId}...`)
+      const url = `${API_BASE_URL}/bookings/seats/availability?vehicleId=${schedule.vehicleID}&date=${travelDate}`
       
-      const response = await fetch(`${API_BASE_URL}/schedules/${scheduleId}/seats`, {
+      const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
-      if (!response.ok) throw new Error('Failed to fetch seat availability')
-      const data = await response.json()
+      if (!response.ok) {
+        throw new Error('Failed to fetch seat availability')
+      }
       
-      setAvailableSeats(data.availableSeats || [])
-      setSeats(data.allSeats || [])
+      const data = await response.json()
+      setAvailableSeats(data.seats || [])
+      setSeats(data.seats || [])
       
     } catch (error) {
       console.error('❌ Error fetching seats:', error)
@@ -177,11 +231,88 @@ function BookingPage() {
     }
   }
 
-  /**
-   * Create booking and initiate M-Pesa payment
-   */
+  const startPaymentPolling = (bookingId, bookingRef, totalAmount) => {
+    let pollCount = 0
+    const maxPolls = 60 // 60 seconds max wait (2 seconds per check = 2 minutes)
+    
+    console.log(`🔄 Starting payment polling for booking ${bookingId}`);
+    
+    const interval = setInterval(async () => {
+      pollCount++
+      console.log(`📊 Polling payment status (${pollCount}/${maxPolls}) for booking ${bookingId}`);
+      
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          console.log(`⚠️ Failed to fetch booking status: ${response.status}`);
+          return;
+        }
+        
+        const data = await response.json()
+        console.log(`📥 Booking status response:`, data);
+        
+        // Check different possible status locations
+        const isPaid = data.booking?.paymentStatus === 'paid' || 
+                       data.booking?.payment?.status === 'completed' ||
+                       data.booking?.paymentStatus === 'completed' ||
+                       data.paymentStatus === 'paid' ||
+                       data.status === 'confirmed'
+        
+        console.log(`   Payment status check: isPaid = ${isPaid}`);
+        console.log(`   Booking status: ${data.booking?.status || data.status}`);
+        console.log(`   Payment status: ${data.booking?.paymentStatus || data.booking?.payment?.status}`);
+        
+        if (isPaid) {
+          clearInterval(interval)
+          setPollingInterval(null)
+          setPaymentStatus({ 
+            type: 'success', 
+            message: `✅ Payment confirmed! Booking ${bookingRef} is confirmed.` 
+          })
+          alert(`✅ Payment Successful!\n\nBooking Reference: ${bookingRef}\nAmount: KSh ${totalAmount}\nSeats: ${selectedSeats.join(', ')}\n\nTicket has been sent to your email.`)
+          console.log(`✅ Payment confirmed! Redirecting to My Bookings...`);
+          setTimeout(() => {
+            navigate('/my-bookings')
+          }, 2000)
+        } else if (data.booking?.paymentStatus === 'failed' || data.paymentStatus === 'failed') {
+          clearInterval(interval)
+          setPollingInterval(null)
+          setPaymentStatus({ 
+            type: 'error', 
+            message: `❌ Payment failed. Please try again.` 
+          })
+        } else if (pollCount >= maxPolls) {
+          clearInterval(interval)
+          setPollingInterval(null)
+          setPaymentStatus({ 
+            type: 'info', 
+            message: `Payment initiated. You'll receive confirmation via email shortly. Booking Reference: ${bookingRef}` 
+          })
+          console.log(`⏰ Polling timeout, redirecting anyway...`);
+          setTimeout(() => {
+            navigate('/my-bookings')
+          }, 3000)
+        }
+      } catch (err) {
+        console.error('Error checking payment status:', err)
+        if (pollCount >= maxPolls) {
+          clearInterval(interval)
+          setPollingInterval(null)
+          setTimeout(() => {
+            navigate('/my-bookings')
+          }, 3000)
+        }
+      }
+    }, 2000) // Check every 2 seconds
+    
+    setPollingInterval(interval)
+  }
+
   const handleBook = async () => {
-    // Validation
     if (!selectedSchedule) {
       alert('Please select a schedule')
       return
@@ -197,35 +328,36 @@ function BookingPage() {
       return
     }
 
+    const phoneRegex = /^[0-9]{10,15}$/
+    const cleanPhone = passengerDetails.phone.replace(/[+\s]/g, '')
+    if (!phoneRegex.test(cleanPhone)) {
+      alert('Please enter a valid phone number (10-15 digits)')
+      return
+    }
+
     setProcessingPayment(true)
     setPaymentStatus(null)
 
     try {
       const token = localStorage.getItem('token')
-      const userStr = localStorage.getItem('user')
-      const user = JSON.parse(userStr)
       
-      // Prepare booking data
+      // Step 1: Create the booking
       const bookingData = {
-        scheduleId: selectedSchedule.scheduleID,
-        routeId: selectedSchedule.routeID,
+        routeId: selectedRoute.routeID,
         vehicleId: selectedSchedule.vehicleID,
         seatNumbers: selectedSeats,
-        travelDate: selectedSchedule.departureTime,
+        travelDate: selectedSchedule.departureTime.split('T')[0],
         passengers: selectedSeats.length,
-        amount: selectedSchedule.price * selectedSeats.length,
         passengerDetails: {
           name: passengerDetails.name,
           phone: passengerDetails.phone,
           email: passengerDetails.email,
           idNumber: passengerDetails.idNumber
-        }
+        },
+        paymentMethod: 'mpesa'
       }
 
-      console.log('📝 Creating booking:', bookingData)
-
-      // Create booking and initiate payment
-      const response = await fetch(`${API_BASE_URL}/bookings`, {
+      const bookingResponse = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -234,45 +366,86 @@ function BookingPage() {
         body: JSON.stringify(bookingData)
       })
 
-      const data = await response.json()
+      const bookingResult = await bookingResponse.json()
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create booking')
+      if (!bookingResponse.ok) {
+        throw new Error(bookingResult.message || 'Failed to create booking')
       }
 
-      console.log('✅ Booking created:', data)
+      const bookingId = bookingResult.booking?.id
+      const bookingRef = bookingResult.booking?.reference || `ER${bookingId}`
+      const totalAmount = calculateTotal()
+      
+      setBookingReference(bookingRef)
 
-      setPaymentStatus({
-        type: 'success',
-        message: 'M-Pesa prompt sent to your phone. Please check and enter PIN.'
+      console.log(`💰 Booking created: ${bookingRef} (ID: ${bookingId}), Amount: KSh ${totalAmount}`);
+
+      // Step 2: Initiate M-Pesa payment
+      const paymentData = {
+        phoneNumber: cleanPhone,
+        amount: totalAmount,
+        bookingId: bookingId,
+        accountReference: bookingRef
+      }
+
+      const paymentResponse = await fetch(`${API_BASE_URL}/mpesa/stkpush`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paymentData)
       })
 
-      // Show M-Pesa instructions
-      alert(`📱 M-Pesa prompt sent to ${passengerDetails.phone}\n\nPlease check your phone and enter your PIN to complete payment.\n\nBooking Reference: ${data.booking.bookingReference}`)
+      const paymentResult = await paymentResponse.json()
 
-      // Navigate to my-bookings after short delay
-      setTimeout(() => {
-        navigate('/my-bookings')
-      }, 3000)
+      if (!paymentResponse.ok) {
+        throw new Error(paymentResult.message || 'Failed to initiate payment')
+      }
+
+      // Payment initiated successfully
+      console.log(`💰 Payment initiated, CheckoutRequestID: ${paymentResult.checkoutRequestID}`);
+      setPaymentStatus({ 
+        type: 'success', 
+        message: `📱 M-Pesa prompt sent to ${passengerDetails.phone}! Please check your phone and enter your PIN to complete payment.` 
+      })
+
+      // Show M-Pesa prompt instructions
+      const userConfirmed = window.confirm(
+        `📱 M-Pesa Payment Initiated!\n\n` +
+        `Please check your phone ending with ${passengerDetails.phone.slice(-4)} for the payment prompt.\n\n` +
+        `1. Enter your M-Pesa PIN\n` +
+        `2. Confirm the payment of KSh ${totalAmount}\n` +
+        `3. You'll receive confirmation via email\n\n` +
+        `Booking Reference: ${bookingRef}\n\n` +
+        `Click OK to continue waiting for payment confirmation`
+      )
+
+      if (userConfirmed) {
+        // Start polling for payment status
+        startPaymentPolling(bookingId, bookingRef, totalAmount)
+      } else {
+        setPaymentStatus({ 
+          type: 'info', 
+          message: `Booking created! Booking Reference: ${bookingRef}. You'll receive payment confirmation via email.` 
+        })
+        setTimeout(() => {
+          navigate('/my-bookings')
+        }, 3000)
+      }
 
     } catch (error) {
-      console.error('❌ Booking error:', error)
-      
-      setPaymentStatus({
-        type: 'error',
-        message: error.message || 'Failed to complete booking'
+      console.error('❌ Booking/Payment error:', error)
+      setPaymentStatus({ 
+        type: 'error', 
+        message: error.message || 'Booking failed. Please try again.' 
       })
-      
-      alert(`❌ Booking failed: ${error.message}`)
+      alert(`❌ Booking Failed\n\n${error.message}\n\nPlease try again or contact support.`)
     } finally {
       setProcessingPayment(false)
     }
   }
 
-  // ============================
-  // HELPER FUNCTIONS
-  // ============================
-  
   const handlePassengerChange = (e) => {
     setPassengerDetails({
       ...passengerDetails,
@@ -286,9 +459,9 @@ function BookingPage() {
   }
 
   const formatDateTime = (dateString) => {
+    if (!dateString) return ''
     return new Date(dateString).toLocaleString('en-KE', {
       weekday: 'short',
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -297,21 +470,37 @@ function BookingPage() {
   }
 
   const formatTime = (dateString) => {
+    if (!dateString) return ''
     return new Date(dateString).toLocaleTimeString('en-KE', {
       hour: '2-digit',
       minute: '2-digit'
     })
   }
 
-  // ============================
-  // RENDER FUNCTIONS
-  // ============================
-  
+  const resetBooking = () => {
+    setSelectedRoute(null)
+    setSelectedSchedule(null)
+    setSelectedSeats([])
+    setPassengerDetails({
+      name: '',
+      phone: '',
+      email: '',
+      idNumber: ''
+    })
+    setPaymentStatus(null)
+    setBookingReference(null)
+    setActiveStep(1)
+    // Reset date to today
+    setSelectedDate(new Date().toISOString().split('T')[0])
+  }
+
   if (loading && routes.length === 0) {
     return (
       <div style={styles.loadingContainer}>
-        <div style={styles.loadingSpinner}></div>
-        <p style={styles.loadingText}>Loading available routes...</p>
+        <div style={styles.loadingContent}>
+          <div style={styles.spinner}></div>
+          <p style={styles.loadingText}>Loading your journey options...</p>
+        </div>
       </div>
     )
   }
@@ -319,707 +508,1073 @@ function BookingPage() {
   if (error) {
     return (
       <div style={styles.errorContainer}>
-        <div style={styles.errorIcon}>❌</div>
-        <h2 style={styles.errorTitle}>Something went wrong</h2>
-        <p style={styles.errorText}>{error}</p>
-        <button 
-          onClick={() => fetchInitialData()}
-          style={styles.retryButton}
-        >
-          Try Again
-        </button>
+        <div style={styles.errorCard}>
+          <div style={styles.errorIcon}>❌</div>
+          <h2 style={styles.errorTitle}>Something went wrong</h2>
+          <p style={styles.errorMessage}>{error}</p>
+          <button onClick={() => fetchInitialData()} style={styles.retryButton}>
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Book Your Journey</h1>
-      <p style={styles.subtitle}>Select route, schedule, and seats</p>
-      
-      {/* Payment Status Message */}
-      {paymentStatus && (
-        <div style={{
-          ...styles.paymentStatus,
-          ...(paymentStatus.type === 'success' ? styles.paymentSuccess : styles.paymentError)
-        }}>
-          <span style={styles.paymentIcon}>
-            {paymentStatus.type === 'success' ? '✅' : '❌'}
-          </span>
-          <p style={styles.paymentMessage}>{paymentStatus.message}</p>
-        </div>
-      )}
-      
-      {/* Route Selection */}
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>1. Select Route</h2>
-        <div style={styles.routesGrid}>
-          {routes.map(route => (
-            <div 
-              key={route.routeID}
-              style={{
-                ...styles.routeCard,
-                ...(selectedRoute?.routeID === route.routeID ? styles.selectedRoute : {})
-              }}
-              onClick={() => setSelectedRoute(route)}
-            >
-              <div style={styles.routeHeader}>
-                <h3 style={styles.routeName}>
-                  {route.origin} → {route.destination}
-                </h3>
-                <div style={styles.routeDetails}>
-                  <span style={styles.duration}>⏱️ {route.estimatedTime}</span>
-                  <span style={styles.distance}>📏 {route.distance} km</span>
-                </div>
-              </div>
-              <div style={styles.routePrice}>
-                <div style={styles.price}>KSh {route.basePrice}</div>
-                <div style={styles.selectBadge}>
-                  {selectedRoute?.routeID === route.routeID ? '✓ Selected' : 'Select Route'}
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.headerIcon}>🚌</div>
+        <h1 style={styles.title}>EasyRide Booking</h1>
+        <p style={styles.subtitle}>Your journey begins here. Select your route, choose your seats, and travel in comfort</p>
+      </div>
+
+      {/* Real M-Pesa Mode Banner */}
+      <div style={{
+        ...styles.simulationBanner,
+        background: '#fef3c7',
+        borderColor: '#f59e0b'
+      }}>
+        <span style={{ fontSize: '1.25rem' }}>💰</span>
+        <div>
+          <strong style={{ color: '#92400e' }}>REAL M-PESA MODE</strong>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#78350f' }}>
+            Real money will be deducted from your M-Pesa account
+          </p>
         </div>
       </div>
 
-      {/* Schedule Selection */}
-      {selectedRoute && (
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>2. Select Schedule</h2>
-          {loading ? (
-            <div style={styles.smallLoader}>Loading schedules...</div>
-          ) : schedules.length === 0 ? (
-            <div style={styles.noDataMessage}>
-              No available schedules for this route. Please try another route.
+      {/* Progress Steps */}
+      <div style={styles.stepsContainer}>
+        {steps.map((step, index) => (
+          <div key={step.number} style={styles.stepWrapper}>
+            <div style={styles.stepItem}>
+              <div style={{
+                ...styles.stepCircle,
+                background: activeStep >= step.number ? step.color : '#e2e8f0',
+                color: activeStep >= step.number ? 'white' : '#64748b'
+              }}>
+                <span style={styles.stepIcon}>{step.icon}</span>
+              </div>
+              <p style={{
+                ...styles.stepTitle,
+                color: activeStep >= step.number ? '#1f2937' : '#94a3b8'
+              }}>{step.title}</p>
             </div>
-          ) : (
-            <div style={styles.schedulesList}>
-              {schedules.map(schedule => (
-                <div
-                  key={schedule.scheduleID}
-                  style={{
-                    ...styles.scheduleCard,
-                    ...(selectedSchedule?.scheduleID === schedule.scheduleID ? styles.selectedSchedule : {})
-                  }}
-                  onClick={() => setSelectedSchedule(schedule)}
-                >
-                  <div style={styles.scheduleInfo}>
-                    <div>
-                      <h3 style={styles.scheduleTime}>
-                        {formatTime(schedule.departureTime)} → {formatTime(schedule.arrivalTime)}
-                      </h3>
-                      <p style={styles.scheduleDate}>
-                        {formatDateTime(schedule.departureTime)}
-                      </p>
-                    </div>
-                    <div style={styles.vehicleInfo}>
-                      <p style={styles.vehicle}>
-                        {schedule.vehicleType || 'Vehicle'} {schedule.vehicleNumber ? `(${schedule.vehicleNumber})` : ''}
-                      </p>
-                      <p style={styles.driver}>Driver: {schedule.driverName || 'To be assigned'}</p>
-                    </div>
-                  </div>
-                  <div style={styles.scheduleDetails}>
-                    <div style={styles.seatAvailability}>
-                      <span style={styles.availableSeats}>
-                        {schedule.availableSeats || 0} seats available
-                      </span>
-                      <span style={styles.capacity}>
-                        (Capacity: {schedule.capacity || 0})
-                      </span>
-                    </div>
-                    <div style={styles.schedulePrice}>
-                      <div style={styles.price}>KSh {schedule.price}</div>
-                      <button
-                        style={styles.selectButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedSchedule(schedule)
-                        }}
-                      >
-                        {selectedSchedule?.scheduleID === schedule.scheduleID ? 'Selected' : 'Select'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Seat Selection */}
-      {selectedSchedule && (
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>3. Select Seats</h2>
-          {loading ? (
-            <div style={styles.smallLoader}>Loading seat map...</div>
-          ) : (
-            <SeatMap
-              capacity={selectedSchedule.capacity || 14}
-              bookedSeats={availableSeats.filter(s => !s.available).map(s => s.seatNumber)}
-              selectedSeats={selectedSeats}
-              onSeatSelect={setSelectedSeats}
-              maxSelectable={5}
-              seatLayout={seats}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Passenger Details */}
-      {selectedSchedule && selectedSeats.length > 0 && (
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>4. Passenger Details</h2>
-          <div style={styles.passengerForm}>
-            <div style={styles.formGrid}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Full Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={passengerDetails.name}
-                  onChange={handlePassengerChange}
-                  placeholder="John Doe"
-                  style={styles.input}
-                  required
-                  disabled={processingPayment}
-                />
-              </div>
-              
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Phone Number *</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={passengerDetails.phone}
-                  onChange={handlePassengerChange}
-                  placeholder="0712345678"
-                  style={styles.input}
-                  required
-                  disabled={processingPayment}
-                />
-                <small style={styles.inputHint}>For M-Pesa payment and ticket</small>
-              </div>
-              
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={passengerDetails.email}
-                  onChange={handlePassengerChange}
-                  placeholder="john@example.com"
-                  style={styles.input}
-                  disabled={processingPayment}
-                />
-              </div>
-              
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>ID/Passport Number</label>
-                <input
-                  type="text"
-                  name="idNumber"
-                  value={passengerDetails.idNumber}
-                  onChange={handlePassengerChange}
-                  placeholder="National ID or Passport"
-                  style={styles.input}
-                  disabled={processingPayment}
-                />
-              </div>
-            </div>
-            
-            <p style={styles.formNote}>
-              * Required fields. M-Pesa payment will be sent to provided phone number.
-            </p>
+            {index < steps.length - 1 && (
+              <div style={{
+                ...styles.stepLine,
+                background: activeStep > step.number ? step.color : '#e2e8f0'
+              }} />
+            )}
           </div>
+        ))}
+      </div>
+
+      {/* Payment Status */}
+      {paymentStatus && (
+        <div style={{
+          ...styles.paymentStatus,
+          background: paymentStatus.type === 'success' ? '#d1fae5' : paymentStatus.type === 'error' ? '#fee2e2' : '#fed7aa',
+          color: paymentStatus.type === 'success' ? '#065f46' : paymentStatus.type === 'error' ? '#991b1b' : '#92400e',
+          borderColor: paymentStatus.type === 'success' ? '#a7f3d0' : paymentStatus.type === 'error' ? '#fecaca' : '#fed7aa'
+        }}>
+          <span style={styles.paymentStatusIcon}>
+            {paymentStatus.type === 'success' ? '✅' : paymentStatus.type === 'error' ? '❌' : 'ℹ️'}
+          </span>
+          <p style={styles.paymentStatusMessage}>{paymentStatus.message}</p>
+          {bookingReference && (
+            <span style={styles.bookingRef}>Ref: {bookingReference}</span>
+          )}
         </div>
       )}
+      
+      {/* Reset Button */}
+      {selectedRoute && (
+        <div style={styles.resetContainer}>
+          <button onClick={resetBooking} style={styles.resetButton}>
+            🔄 Start New Booking
+          </button>
+        </div>
+      )}
+      
+      {/* Main Content - Two Column Layout */}
+      <div style={styles.mainGrid}>
+        {/* Left Column */}
+        <div style={styles.leftColumn}>
+          {/* Route Selection */}
+          <div style={styles.card}>
+            <div style={{...styles.cardHeader, background: 'linear-gradient(135deg, #3b82f6, #60a5fa)'}}>
+              <h2 style={styles.cardTitle}>
+                <span style={styles.cardIcon}>🛣️</span>
+                Select Your Route
+              </h2>
+              <p style={styles.cardSubtitle}>Choose from our available routes</p>
+            </div>
+            <div style={styles.cardBody}>
+              <div style={styles.routesGrid}>
+                {routes.map(route => (
+                  <button
+                    key={route.routeID}
+                    onClick={() => setSelectedRoute(route)}
+                    style={{
+                      ...styles.routeButton,
+                      background: selectedRoute?.routeID === route.routeID 
+                        ? '#eff6ff'
+                        : 'white',
+                      borderColor: selectedRoute?.routeID === route.routeID ? '#3b82f6' : '#e2e8f0'
+                    }}
+                  >
+                    <div style={styles.routeHeader}>
+                      <h3 style={styles.routeTitle}>
+                        {route.origin} → {route.destination}
+                      </h3>
+                      {selectedRoute?.routeID === route.routeID && (
+                        <div style={styles.selectedBadge}>✓</div>
+                      )}
+                    </div>
+                    <div style={styles.routeDetails}>
+                      <span>⏱️ {route.estimatedTime || 'N/A'}</span>
+                      <span>📏 {route.distance || 'N/A'} km</span>
+                    </div>
+                    <div style={styles.routeFooter}>
+                      <span style={styles.routePrice}>KSh {route.baseFare}</span>
+                      <span style={selectedRoute?.routeID === route.routeID ? styles.selectedText : styles.selectText}>
+                        {selectedRoute?.routeID === route.routeID ? 'Selected' : 'Select Route'}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-      {/* Booking Summary & Action */}
-      {(selectedSchedule || selectedSeats.length > 0) && (
-        <div style={styles.summarySection}>
-          <div style={styles.summaryCard}>
-            <h2 style={styles.summaryTitle}>Booking Summary</h2>
-            
-            {selectedSchedule && (
-              <div style={styles.summaryDetails}>
-                <div style={styles.summaryRow}>
-                  <span style={styles.summaryLabel}>Route:</span>
-                  <span style={styles.summaryValue}>
-                    {selectedRoute?.origin} → {selectedRoute?.destination}
-                  </span>
+          {/* Date Selection & Schedule */}
+          {selectedRoute && (
+            <div style={styles.card}>
+              <div style={{...styles.cardHeader, background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)'}}>
+                <h2 style={styles.cardTitle}>
+                  <span style={styles.cardIcon}>📅</span>
+                  Select Travel Date & Schedule
+                </h2>
+                <p style={styles.cardSubtitle}>Choose your travel date and departure time</p>
+              </div>
+              <div style={styles.cardBody}>
+                {/* Date Picker */}
+                <div style={styles.datePickerContainer}>
+                  <label style={styles.dateLabel}>Travel Date</label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    min={getMinDate()}
+                    max={getMaxDate()}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    style={styles.dateInput}
+                  />
+                  <p style={styles.dateHelper}>
+                    {selectedDate === new Date().toISOString().split('T')[0] 
+                      ? "⚠️ Today's bookings: Only available for future departure times" 
+                      : "📅 Book up to 30 days in advance | 🚌 Schedules available from 6:00 AM to 8:00 PM"}
+                  </p>
                 </div>
-                
-                <div style={styles.summaryRow}>
-                  <span style={styles.summaryLabel}>Departure:</span>
-                  <span style={styles.summaryValue}>
-                    {formatDateTime(selectedSchedule.departureTime)}
-                  </span>
-                </div>
-                
-                <div style={styles.summaryRow}>
-                  <span style={styles.summaryLabel}>Vehicle:</span>
-                  <span style={styles.summaryValue}>
-                    {selectedSchedule.vehicleType || 'Vehicle'} {selectedSchedule.vehicleNumber || ''}
-                  </span>
-                </div>
-                
-                {selectedSeats.length > 0 && (
-                  <div style={styles.summaryRow}>
-                    <span style={styles.summaryLabel}>Selected Seats:</span>
-                    <span style={styles.summaryValue}>
-                      {selectedSeats.join(', ')}
-                    </span>
+
+                {/* Schedule List */}
+                {loading ? (
+                  <div style={styles.scheduleLoading}>
+                    <div style={styles.spinnerSmall}></div>
+                    <span>Loading schedules...</span>
+                  </div>
+                ) : schedules.length === 0 ? (
+                  <div style={styles.noSchedules}>
+                    <span>🚫</span>
+                    <p>No schedules available for this date</p>
+                    <p style={styles.noSchedulesHint}>Try selecting a different date</p>
+                  </div>
+                ) : (
+                  <div style={styles.schedulesList}>
+                    {schedules.map(schedule => {
+                      const isAvailable = isScheduleAvailable(schedule)
+                      const status = getScheduleStatus(schedule)
+                      
+                      return (
+                        <button
+                          key={schedule.scheduleID}
+                          onClick={() => {
+                            if (isAvailable) {
+                              setSelectedSchedule(schedule)
+                            }
+                          }}
+                          disabled={!isAvailable}
+                          style={{
+                            ...styles.scheduleButton,
+                            background: selectedSchedule?.scheduleID === schedule.scheduleID 
+                              ? '#faf5ff'
+                              : 'white',
+                            borderColor: selectedSchedule?.scheduleID === schedule.scheduleID ? '#8b5cf6' : '#e2e8f0',
+                            opacity: !isAvailable ? 0.6 : 1,
+                            cursor: !isAvailable ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          <div style={styles.scheduleHeader}>
+                            <div>
+                              <div style={styles.scheduleTime}>
+                                <span style={styles.timeLarge}>{formatTime(schedule.departureTime)}</span>
+                                <span style={styles.timeArrow}>→</span>
+                                <span style={styles.timeSmall}>{formatTime(schedule.arrivalTime)}</span>
+                              </div>
+                              <p style={styles.scheduleDate}>{formatDateTime(schedule.departureTime)}</p>
+                            </div>
+                            <div style={styles.schedulePrice}>
+                              <span style={styles.priceAmount}>KSh {schedule.price}</span>
+                              <span style={{...styles.availableSeats, color: status.color, display: 'block', fontSize: '0.7rem'}}>{status.text}</span>
+                              {selectedSchedule?.scheduleID === schedule.scheduleID ? (
+                                <span style={styles.selectedScheduleBadge}>Selected</span>
+                              ) : (
+                                <span style={styles.selectButton}>Select</span>
+                              )}
+                            </div>
+                          </div>
+                          <div style={styles.scheduleFooter}>
+                            <span>🚌 {schedule.vehicleType || 'Vehicle'} {schedule.vehicleNumber || ''}</span>
+                            <span style={styles.availableSeats}>✓ {schedule.availableSeats || 0} seats available</span>
+                          </div>
+                          {!isAvailable && (
+                            <div style={{marginTop: '0.5rem', fontSize: '0.7rem', color: '#ef4444', textAlign: 'right'}}>
+                              ⏰ Departure time has passed
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
-                
-                <div style={styles.summaryRow}>
-                  <span style={styles.summaryLabel}>Price per seat:</span>
-                  <span style={styles.summaryValue}>KSh {selectedSchedule.price}</span>
-                </div>
-                
-                <div style={styles.summaryRow}>
-                  <span style={styles.summaryLabel}>Number of seats:</span>
-                  <span style={styles.summaryValue}>{selectedSeats.length}</span>
-                </div>
-                
-                <div style={styles.summaryDivider}></div>
-                
-                <div style={styles.summaryRow}>
-                  <span style={styles.totalLabel}>Total Amount:</span>
-                  <span style={styles.totalValue}>KSh {calculateTotal()}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Seat Selection */}
+          {selectedSchedule && (
+            <div style={styles.card}>
+              <div style={{...styles.cardHeader, background: 'linear-gradient(135deg, #10b981, #34d399)'}}>
+                <h2 style={styles.cardTitle}>
+                  <span style={styles.cardIcon}>💺</span>
+                  Select Seats
+                </h2>
+                <p style={styles.cardSubtitle}>Choose your preferred seats</p>
+              </div>
+              <div style={styles.cardBody}>
+                <SeatMap
+                  capacity={selectedSchedule.capacity || 14}
+                  bookedSeats={availableSeats.filter(s => !s.isAvailable).map(s => s.number)}
+                  selectedSeats={selectedSeats}
+                  onSeatSelect={setSelectedSeats}
+                  maxSelectable={5}
+                  seatLayout={seats}
+                />
+                <div style={styles.seatLegend}>
+                  <span style={styles.legendItem}><span style={{...styles.legendColor, background: '#e2e8f0'}}></span> Available</span>
+                  <span style={styles.legendItem}><span style={{...styles.legendColor, background: '#10b981'}}></span> Selected</span>
+                  <span style={styles.legendItem}><span style={{...styles.legendColor, background: '#ef4444'}}></span> Booked</span>
+                  {selectedSeats.length > 0 && (
+                    <button onClick={() => setSelectedSeats([])} style={styles.clearSeatsButton}>
+                      Clear all ({selectedSeats.length})
+                    </button>
+                  )}
                 </div>
               </div>
-            )}
-            
-            <button
-              onClick={handleBook}
-              disabled={
-                processingPayment ||
-                selectedSeats.length === 0 || 
-                !passengerDetails.name || 
-                !passengerDetails.phone
-              }
-              style={{
-                ...styles.bookButton,
-                ...((selectedSeats.length === 0 || !passengerDetails.name || !passengerDetails.phone || processingPayment) ? styles.disabledButton : {})
-              }}
-            >
-              {processingPayment ? (
-                <span style={styles.buttonSpinner}>
-                  <span style={styles.smallSpinner}></span>
-                  Processing Payment...
-                </span>
-              ) : selectedSeats.length === 0 ? (
-                'Select Seats First'
-              ) : !passengerDetails.name || !passengerDetails.phone ? (
-                'Complete Passenger Details'
-              ) : (
-                `💳 Pay KSh ${calculateTotal()} via M-Pesa`
-              )}
-            </button>
-            
-            <p style={styles.bookingNote}>
-              After confirmation, you'll receive an M-Pesa prompt on {passengerDetails.phone || 'your phone'}.
-              Your ticket will be sent via SMS.
-            </p>
-          </div>
+            </div>
+          )}
+
+          {/* Passenger Details */}
+          {selectedSchedule && selectedSeats.length > 0 && (
+            <div style={styles.card}>
+              <div style={{...styles.cardHeader, background: 'linear-gradient(135deg, #f97316, #fb923c)'}}>
+                <h2 style={styles.cardTitle}>
+                  <span style={styles.cardIcon}>👤</span>
+                  Passenger Details
+                </h2>
+                <p style={styles.cardSubtitle}>Enter your information</p>
+              </div>
+              <div style={styles.cardBody}>
+                <div style={styles.formGrid}>
+                  <div>
+                    <label style={styles.label}>Full Name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={passengerDetails.name}
+                      onChange={handlePassengerChange}
+                      placeholder="John Doe"
+                      style={styles.input}
+                      disabled={processingPayment}
+                    />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Phone Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={passengerDetails.phone}
+                      onChange={handlePassengerChange}
+                      placeholder="0712345678"
+                      style={styles.input}
+                      disabled={processingPayment}
+                    />
+                    <p style={styles.helperText}>For M-Pesa payment and ticket</p>
+                  </div>
+                  <div>
+                    <label style={styles.label}>Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={passengerDetails.email}
+                      onChange={handlePassengerChange}
+                      placeholder="john@example.com"
+                      style={styles.input}
+                      disabled={processingPayment}
+                    />
+                  </div>
+                  <div>
+                    <label style={styles.label}>ID/Passport Number</label>
+                    <input
+                      type="text"
+                      name="idNumber"
+                      value={passengerDetails.idNumber}
+                      onChange={handlePassengerChange}
+                      placeholder="National ID or Passport"
+                      style={styles.input}
+                      disabled={processingPayment}
+                    />
+                  </div>
+                </div>
+                <p style={styles.formNote}>* Required fields. M-Pesa payment will be sent to provided phone number.</p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right Column - Booking Summary */}
+        {(selectedSchedule || selectedSeats.length > 0) && (
+          <div style={styles.rightColumn}>
+            <div style={styles.summaryCard}>
+              <div style={{...styles.summaryHeader, background: 'linear-gradient(135deg, #4f46e5, #818cf8)'}}>
+                <h2 style={styles.summaryTitle}>
+                  <span style={styles.summaryIcon}>📋</span>
+                  Booking Summary
+                </h2>
+              </div>
+              <div style={styles.summaryBody}>
+                {selectedSchedule && (
+                  <>
+                    <div style={styles.summaryRow}>
+                      <span style={styles.summaryLabel}>Travel Date:</span>
+                      <span style={styles.summaryValue}>
+                        {new Date(selectedDate).toLocaleDateString('en-KE', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div style={styles.summaryRow}>
+                      <span style={styles.summaryLabel}>Route:</span>
+                      <span style={styles.summaryValue}>
+                        {selectedRoute?.origin} → {selectedRoute?.destination}
+                      </span>
+                    </div>
+                    <div style={styles.summaryRow}>
+                      <span style={styles.summaryLabel}>Departure:</span>
+                      <span style={styles.summaryValue}>
+                        {formatDateTime(selectedSchedule.departureTime)}
+                      </span>
+                    </div>
+                    <div style={styles.summaryRow}>
+                      <span style={styles.summaryLabel}>Vehicle:</span>
+                      <span style={styles.summaryValue}>
+                        {selectedSchedule.vehicleType || 'Vehicle'} {selectedSchedule.vehicleNumber || ''}
+                      </span>
+                    </div>
+                    {selectedSeats.length > 0 && (
+                      <div style={styles.summaryRow}>
+                        <span style={styles.summaryLabel}>Selected Seats:</span>
+                        <span style={{...styles.summaryValue, color: '#059669', fontWeight: 'bold'}}>
+                          {selectedSeats.join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    <div style={styles.summaryRow}>
+                      <span style={styles.summaryLabel}>Price per seat:</span>
+                      <span style={styles.summaryValue}>KSh {selectedSchedule.price}</span>
+                    </div>
+                    <div style={styles.summaryRow}>
+                      <span style={styles.summaryLabel}>Number of seats:</span>
+                      <span style={styles.summaryValue}>{selectedSeats.length}</span>
+                    </div>
+                    <div style={styles.totalRow}>
+                      <span style={styles.totalLabel}>Total Amount:</span>
+                      <span style={styles.totalAmount}>KSh {calculateTotal()}</span>
+                    </div>
+                  </>
+                )}
+                
+                <button
+                  onClick={handleBook}
+                  disabled={processingPayment || selectedSeats.length === 0 || !passengerDetails.name || !passengerDetails.phone}
+                  style={{
+                    ...styles.payButton,
+                    background: (selectedSeats.length === 0 || !passengerDetails.name || !passengerDetails.phone || processingPayment)
+                      ? '#cbd5e1'
+                      : 'linear-gradient(135deg, #059669, #10b981)',
+                    cursor: (selectedSeats.length === 0 || !passengerDetails.name || !passengerDetails.phone || processingPayment)
+                      ? 'not-allowed'
+                      : 'pointer'
+                  }}
+                >
+                  {processingPayment ? (
+                    <span>
+                      <span style={styles.spinnerSmall}></span>
+                      Processing...
+                    </span>
+                  ) : selectedSeats.length === 0 ? (
+                    'Select Seats First'
+                  ) : !passengerDetails.name || !passengerDetails.phone ? (
+                    'Complete Passenger Details'
+                  ) : (
+                    `💰 Pay KSh ${calculateTotal()} via M-Pesa`
+                  )}
+                </button>
+                
+                <p style={styles.paymentNote}>
+                  Secure payment via M-Pesa. You'll receive a prompt on your phone to complete payment.
+                </p>
+                
+                {bookingReference && (
+                  <div style={styles.bookingInfo}>
+                    <p style={styles.bookingRefText}>Booking Reference: <strong>{bookingReference}</strong></p>
+                    <p style={styles.bookingNote}>Payment confirmation will be sent via email</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-// ============================
-// STYLES
-// ============================
-
 const styles = {
   container: {
-    padding: '30px 20px',
-    backgroundColor: '#f8fafc',
     minHeight: '100vh',
-    maxWidth: '1200px',
-    margin: '0 auto',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
+    padding: '2rem 1rem',
   },
-  title: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: '10px',
-    color: '#1e293b',
-  },
-  subtitle: {
-    fontSize: '16px',
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: '40px',
-  },
-  section: {
-    marginBottom: '40px',
-  },
-  sectionTitle: {
-    fontSize: '24px',
-    fontWeight: '600',
-    marginBottom: '20px',
-    color: '#334155',
-    paddingBottom: '15px',
-    borderBottom: '2px solid #e2e8f0',
-  },
-  loadingContainer: {
-    height: '100vh',
+  simulationBanner: {
+    maxWidth: '1280px',
+    margin: '0 auto 1rem',
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    border: '2px solid',
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
+  },
+  datePickerContainer: {
+    marginBottom: '1.5rem',
+    padding: '1rem',
+    background: '#fffbef',
+    borderRadius: '0.75rem',
+    border: '1px solid #fed7aa',
+  },
+  dateLabel: {
+    display: 'block',
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    color: '#78350f',
+    marginBottom: '0.5rem',
+  },
+  dateInput: {
+    width: '100%',
+    padding: '0.75rem',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
+    fontSize: '1rem',
+    outline: 'none',
+    transition: 'all 0.3s',
+    background: 'white',
+    color: '#78350f',
+  },
+  dateHelper: {
+    fontSize: '0.7rem',
+    color: '#b45309',
+    marginTop: '0.5rem',
+    textAlign: 'center',
+  },
+  scheduleLoading: {
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '0.5rem',
+    padding: '2rem',
+    color: '#92400e',
+  },
+  noSchedules: {
     textAlign: 'center',
+    padding: '2rem',
+    color: '#92400e',
   },
-  loadingSpinner: {
-    width: '50px',
-    height: '50px',
-    border: '5px solid #f3f3f3',
-    borderTop: '5px solid #3b82f6',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    marginBottom: '20px',
+  noSchedulesHint: {
+    fontSize: '0.75rem',
+    marginTop: '0.5rem',
+    color: '#b45309',
   },
-  loadingText: {
-    color: '#666',
+  schedulesList: {
+    maxHeight: '400px',
+    overflowY: 'auto',
   },
-  smallLoader: {
-    textAlign: 'center',
-    padding: '20px',
-    color: '#666',
-  },
-  errorContainer: {
-    maxWidth: '400px',
-    margin: '100px auto',
-    textAlign: 'center',
-    backgroundColor: 'white',
-    padding: '40px',
-    borderRadius: '15px',
-    boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-  },
-  errorIcon: {
-    fontSize: '60px',
-    marginBottom: '20px',
-  },
-  errorTitle: {
-    fontSize: '24px',
-    fontWeight: '600',
-    marginBottom: '10px',
-    color: '#333',
-  },
-  errorText: {
-    color: '#666',
-    marginBottom: '30px',
-    lineHeight: 1.6,
-  },
-  retryButton: {
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    padding: '12px 30px',
-    borderRadius: '8px',
-    border: 'none',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '16px',
-  },
-  noDataMessage: {
-    textAlign: 'center',
-    padding: '30px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    color: '#666',
-  },
-  paymentStatus: {
-    padding: '15px',
-    borderRadius: '8px',
-    marginBottom: '20px',
+  loadingContainer: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6)',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    justifyContent: 'center',
   },
-  paymentSuccess: {
-    backgroundColor: '#d1fae5',
-    border: '1px solid #10b981',
+  loadingContent: {
+    textAlign: 'center',
   },
-  paymentError: {
-    backgroundColor: '#fee2e2',
-    border: '1px solid #ef4444',
+  spinner: {
+    width: '4rem',
+    height: '4rem',
+    border: '4px solid #fbbf24',
+    borderTopColor: '#f59e0b',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    margin: '0 auto 1rem',
   },
-  paymentIcon: {
-    fontSize: '20px',
+  spinnerSmall: {
+    display: 'inline-block',
+    width: '1rem',
+    height: '1rem',
+    border: '2px solid #fbbf24',
+    borderTopColor: '#f59e0b',
+    borderRadius: '50%',
+    animation: 'spin 0.6s linear infinite',
+    marginRight: '0.5rem',
   },
-  paymentMessage: {
-    margin: 0,
-    fontSize: '14px',
+  loadingText: {
+    color: '#78350f',
+    fontSize: '1.125rem',
     fontWeight: '500',
+  },
+  errorContainer: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1rem',
+  },
+  errorCard: {
+    background: 'white',
+    borderRadius: '1rem',
+    padding: '2rem',
+    maxWidth: '28rem',
+    textAlign: 'center',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+  },
+  errorIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem',
+  },
+  errorTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 'bold',
+    color: '#78350f',
+    marginBottom: '0.5rem',
+  },
+  errorMessage: {
+    color: '#92400e',
+    marginBottom: '1.5rem',
+  },
+  retryButton: {
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    color: 'white',
+    padding: '0.5rem 1.5rem',
+    borderRadius: '0.5rem',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '3rem',
+  },
+  headerIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem',
+    animation: 'bounce 1s ease infinite',
+  },
+  title: {
+    fontSize: '2.5rem',
+    fontWeight: 'bold',
+    background: 'linear-gradient(135deg, #d97706, #f59e0b, #fbbf24)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '0.5rem',
+  },
+  subtitle: {
+    color: '#92400e',
+    fontSize: '1.125rem',
+    maxWidth: '42rem',
+    margin: '0 auto',
+  },
+  stepsContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '3rem',
+    maxWidth: '48rem',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    flexWrap: 'wrap',
+  },
+  stepWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: '80px',
+  },
+  stepItem: {
+    textAlign: 'center',
+    flex: 1,
+  },
+  stepCircle: {
+    width: '3rem',
+    height: '3rem',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto',
+    transition: 'all 0.3s',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  },
+  stepIcon: {
+    fontSize: '1.25rem',
+  },
+  stepTitle: {
+    fontSize: '0.75rem',
+    marginTop: '0.5rem',
+    fontWeight: '600',
+  },
+  stepLine: {
+    height: '2px',
+    flex: 1,
+    margin: '0 0.5rem',
+    transition: 'all 0.3s',
+  },
+  resetContainer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginBottom: '1rem',
+    maxWidth: '1280px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  resetButton: {
+    background: 'white',
+    border: '1px solid #fed7aa',
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    color: '#d97706',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    transition: 'all 0.3s',
+  },
+  paymentStatus: {
+    marginBottom: '1.5rem',
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    border: '1px solid',
+    maxWidth: '1280px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    flexWrap: 'wrap',
+  },
+  paymentStatusIcon: {
+    fontSize: '1.25rem',
+  },
+  paymentStatusMessage: {
+    fontSize: '0.875rem',
+    margin: 0,
+    flex: 1,
+  },
+  bookingRef: {
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    background: 'rgba(0,0,0,0.1)',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '0.375rem',
+  },
+  mainGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '2rem',
+    maxWidth: '1280px',
+    margin: '0 auto',
+  },
+  leftColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  rightColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  card: {
+    background: 'white',
+    borderRadius: '1rem',
+    overflow: 'hidden',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+  },
+  cardHeader: {
+    padding: '1rem 1.5rem',
+  },
+  cardTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '600',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.25rem',
+  },
+  cardIcon: {
+    fontSize: '1.5rem',
+  },
+  cardSubtitle: {
+    fontSize: '0.875rem',
+    color: 'rgba(255,255,255,0.9)',
+  },
+  cardBody: {
+    padding: '1.5rem',
   },
   routesGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '1rem',
   },
-  routeCard: {
-    backgroundColor: 'white',
-    borderRadius: '10px',
-    padding: '20px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+  routeButton: {
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    border: '2px solid',
     cursor: 'pointer',
+    textAlign: 'left',
     transition: 'all 0.3s',
-    border: '2px solid transparent',
-  },
-  selectedRoute: {
-    borderColor: '#3b82f6',
-    transform: 'scale(1.02)',
-    boxShadow: '0 5px 20px rgba(59,130,246,0.2)',
   },
   routeHeader: {
-    marginBottom: '15px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'start',
+    marginBottom: '0.5rem',
   },
-  routeName: {
-    fontSize: '18px',
+  routeTitle: {
+    fontSize: '1rem',
     fontWeight: '600',
-    marginBottom: '5px',
-    color: '#1e293b',
+    color: '#78350f',
+  },
+  selectedBadge: {
+    width: '1.5rem',
+    height: '1.5rem',
+    background: '#059669',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
   },
   routeDetails: {
     display: 'flex',
-    gap: '10px',
-    fontSize: '13px',
-    color: '#64748b',
+    gap: '0.75rem',
+    fontSize: '0.75rem',
+    color: '#92400e',
+    marginBottom: '0.75rem',
+  },
+  routeFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '0.75rem',
+    borderTop: '1px solid #fed7aa',
   },
   routePrice: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: '15px',
-    paddingTop: '15px',
-    borderTop: '1px solid #e2e8f0',
-  },
-  price: {
-    fontSize: '20px',
+    fontSize: '1.25rem',
     fontWeight: 'bold',
-    color: '#3b82f6',
+    color: '#d97706',
   },
-  selectBadge: {
-    color: '#3b82f6',
-    fontSize: '14px',
+  selectText: {
+    fontSize: '0.75rem',
+    color: '#f59e0b',
     fontWeight: '500',
   },
-  schedulesList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
+  selectedText: {
+    fontSize: '0.75rem',
+    color: '#059669',
+    fontWeight: '500',
   },
-  scheduleCard: {
-    backgroundColor: 'white',
-    borderRadius: '10px',
-    padding: '20px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+  scheduleButton: {
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    border: '2px solid',
     cursor: 'pointer',
+    textAlign: 'left',
     transition: 'all 0.3s',
-    border: '2px solid transparent',
+    marginBottom: '1rem',
+    width: '100%',
   },
-  selectedSchedule: {
-    borderColor: '#3b82f6',
-    backgroundColor: '#f0f9ff',
-  },
-  scheduleInfo: {
+  scheduleHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: '15px',
+    alignItems: 'start',
+    marginBottom: '0.75rem',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
   },
   scheduleTime: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: '5px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.25rem',
+  },
+  timeLarge: {
+    fontSize: '1.125rem',
+    fontWeight: 'bold',
+    color: '#78350f',
+  },
+  timeArrow: {
+    color: '#d97706',
+  },
+  timeSmall: {
+    fontSize: '1rem',
+    color: '#92400e',
   },
   scheduleDate: {
-    fontSize: '14px',
-    color: '#64748b',
+    fontSize: '0.75rem',
+    color: '#b45309',
   },
-  vehicleInfo: {
+  schedulePrice: {
     textAlign: 'right',
   },
-  vehicle: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#334155',
-    marginBottom: '3px',
+  priceAmount: {
+    fontSize: '1.125rem',
+    fontWeight: 'bold',
+    color: '#d97706',
+    display: 'block',
+    marginBottom: '0.25rem',
   },
-  driver: {
-    fontSize: '13px',
-    color: '#64748b',
+  selectedScheduleBadge: {
+    fontSize: '0.75rem',
+    background: '#059669',
+    color: 'white',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '0.375rem',
   },
-  scheduleDetails: {
+  selectButton: {
+    fontSize: '0.75rem',
+    background: '#f59e0b',
+    color: 'white',
+    padding: '0.25rem 0.75rem',
+    borderRadius: '0.375rem',
+    cursor: 'pointer',
+  },
+  scheduleFooter: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: '15px',
-    borderTop: '1px solid #e2e8f0',
-  },
-  seatAvailability: {
-    fontSize: '14px',
+    fontSize: '0.75rem',
+    color: '#92400e',
+    paddingTop: '0.75rem',
+    borderTop: '1px solid #fed7aa',
   },
   availableSeats: {
-    color: '#10b981',
-    fontWeight: '600',
-    marginRight: '5px',
+    color: '#059669',
+    fontWeight: '500',
   },
-  capacity: {
-    color: '#64748b',
-    fontSize: '12px',
-  },
-  schedulePrice: {
+  seatLegend: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    gap: '1rem',
+    marginTop: '1rem',
+    flexWrap: 'wrap',
   },
-  selectButton: {
-    padding: '8px 16px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.75rem',
+    color: '#92400e',
+  },
+  legendColor: {
+    width: '1rem',
+    height: '1rem',
+    borderRadius: '0.25rem',
+  },
+  clearSeatsButton: {
+    fontSize: '0.75rem',
+    color: '#dc2626',
+    background: 'none',
     border: 'none',
-    borderRadius: '5px',
-    fontSize: '13px',
-    fontWeight: '500',
     cursor: 'pointer',
-  },
-  passengerForm: {
-    backgroundColor: 'white',
-    padding: '25px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    marginLeft: 'auto',
+    fontWeight: '500',
   },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    marginBottom: '15px',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
+    gridTemplateColumns: '1fr',
+    gap: '1rem',
   },
   label: {
-    fontSize: '14px',
+    display: 'block',
+    fontSize: '0.875rem',
     fontWeight: '500',
-    marginBottom: '5px',
-    color: '#475569',
+    color: '#78350f',
+    marginBottom: '0.5rem',
   },
   input: {
-    padding: '10px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '5px',
-    fontSize: '14px',
+    width: '100%',
+    padding: '0.75rem',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    outline: 'none',
+    transition: 'all 0.3s',
+    background: '#fffbef',
   },
-  inputHint: {
-    fontSize: '11px',
-    color: '#94a3b8',
-    marginTop: '3px',
+  helperText: {
+    fontSize: '0.75rem',
+    color: '#b45309',
+    marginTop: '0.25rem',
   },
   formNote: {
-    fontSize: '13px',
-    color: '#64748b',
+    fontSize: '0.75rem',
+    color: '#b45309',
+    marginTop: '1rem',
     fontStyle: 'italic',
   },
-  summarySection: {
-    marginTop: '40px',
-  },
   summaryCard: {
-    backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '10px',
-    boxShadow: '0 5px 20px rgba(0,0,0,0.1)',
+    background: 'white',
+    borderRadius: '1rem',
+    overflow: 'hidden',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+    position: 'sticky',
+    top: '2rem',
+  },
+  summaryHeader: {
+    padding: '1rem 1.5rem',
   },
   summaryTitle: {
-    fontSize: '20px',
+    fontSize: '1.25rem',
     fontWeight: '600',
-    marginBottom: '20px',
-    color: '#1e293b',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
-  summaryDetails: {
-    marginBottom: '25px',
+  summaryIcon: {
+    fontSize: '1.5rem',
+  },
+  summaryBody: {
+    padding: '1.5rem',
   },
   summaryRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: '10px',
-    fontSize: '15px',
+    padding: '0.75rem 0',
+    borderBottom: '1px solid #fed7aa',
   },
   summaryLabel: {
-    color: '#64748b',
+    color: '#b45309',
+    fontSize: '0.875rem',
   },
   summaryValue: {
-    fontWeight: '500',
-    color: '#1e293b',
+    color: '#78350f',
+    fontSize: '0.875rem',
+    textAlign: 'right',
   },
-  summaryDivider: {
-    height: '1px',
-    backgroundColor: '#e2e8f0',
-    margin: '15px 0',
+  totalRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '1rem 0',
+    marginTop: '0.5rem',
+    borderTop: '2px solid #fed7aa',
   },
   totalLabel: {
-    fontSize: '16px',
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#78350f',
+    fontSize: '1rem',
   },
-  totalValue: {
-    fontSize: '24px',
+  totalAmount: {
+    fontSize: '1.5rem',
     fontWeight: 'bold',
-    color: '#3b82f6',
+    color: '#d97706',
   },
-  bookButton: {
+  payButton: {
     width: '100%',
-    padding: '15px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
+    padding: '1rem',
+    borderRadius: '0.75rem',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginBottom: '15px',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    marginTop: '1.5rem',
     transition: 'all 0.3s',
   },
-  disabledButton: {
-    backgroundColor: '#94a3b8',
-    cursor: 'not-allowed',
+  paymentNote: {
+    textAlign: 'center',
+    fontSize: '0.75rem',
+    color: '#b45309',
+    marginTop: '1rem',
   },
-  bookingNote: {
-    fontSize: '13px',
-    color: '#64748b',
+  bookingInfo: {
+    marginTop: '1rem',
+    padding: '0.75rem',
+    background: '#fffbef',
+    borderRadius: '0.5rem',
     textAlign: 'center',
   },
-  buttonSpinner: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
+  bookingRefText: {
+    fontSize: '0.875rem',
+    color: '#78350f',
+    marginBottom: '0.25rem',
   },
-  smallSpinner: {
-    width: '16px',
-    height: '16px',
-    border: '2px solid rgba(255,255,255,0.3)',
-    borderTopColor: 'white',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
+  bookingNote: {
+    fontSize: '0.75rem',
+    color: '#b45309',
+    margin: 0,
   },
 }
 
-// Add keyframes for spinner animation
-const style = document.createElement('style')
-style.textContent = `
+// Add animations
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
   }
-`
-document.head.appendChild(style)
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default BookingPage

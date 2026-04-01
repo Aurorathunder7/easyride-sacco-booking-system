@@ -68,23 +68,6 @@ function LoginPage() {
     setRememberMe(e.target.checked)
   }
 
-  // Format phone number to match database format
-  const formatPhoneNumber = (input) => {
-    // Remove all non-digit characters
-    const digits = input.replace(/\D/g, '')
-    
-    // If it's a Kenyan number starting with 0, convert to 254 format
-    if (digits.startsWith('0') && digits.length === 10) {
-      return '254' + digits.slice(1)
-    }
-    // If it already starts with 254, return as is
-    if (digits.startsWith('254') && digits.length === 12) {
-      return digits
-    }
-    // Otherwise, return original (might be email)
-    return input
-  }
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -369,7 +352,7 @@ function LoginPage() {
 }
 
 // ============================
-// STYLES
+// STYLES - Warm Cream/Amber Color Scheme
 // ============================
 const styles = {
   container: {
@@ -377,230 +360,240 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
     padding: '20px',
   },
   card: {
     backgroundColor: 'white',
-    borderRadius: '15px',
-    padding: '40px',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+    borderRadius: '1rem',
+    padding: '2rem',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02)',
     width: '100%',
     maxWidth: '450px',
     animation: 'slideIn 0.5s ease-out',
+    border: '1px solid #fed7aa',
   },
   logoContainer: {
     textAlign: 'center',
-    marginBottom: '20px',
+    marginBottom: '1.5rem',
   },
   logo: {
-    fontSize: '60px',
-    marginBottom: '10px',
+    fontSize: '4rem',
+    marginBottom: '0.5rem',
+    animation: 'bounce 1s ease infinite',
   },
   logoText: {
-    fontSize: '28px',
+    fontSize: '1.75rem',
     fontWeight: 'bold',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #d97706, #f59e0b, #fbbf24)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    marginBottom: '5px',
+    marginBottom: '0.25rem',
   },
   tagline: {
-    fontSize: '14px',
-    color: '#666',
+    fontSize: '0.875rem',
+    color: '#92400e',
   },
   title: {
-    fontSize: '24px',
+    fontSize: '1.5rem',
     fontWeight: '600',
-    color: '#374151',
+    color: '#78350f',
     textAlign: 'center',
-    marginBottom: '25px',
+    marginBottom: '1.5rem',
   },
   errorContainer: {
     backgroundColor: '#fee2e2',
     border: '1px solid #fecaca',
-    borderRadius: '8px',
-    padding: '12px',
-    marginBottom: '20px',
+    borderRadius: '0.75rem',
+    padding: '0.75rem',
+    marginBottom: '1.25rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '0.5rem',
   },
   errorIcon: {
-    fontSize: '20px',
+    fontSize: '1.125rem',
   },
   errorText: {
-    color: '#dc2626',
-    fontSize: '14px',
+    color: '#991b1b',
+    fontSize: '0.875rem',
     margin: 0,
+    flex: 1,
   },
   userTypeContainer: {
-    marginBottom: '25px',
-    padding: '20px',
-    backgroundColor: '#f8fafc',
-    borderRadius: '10px',
+    marginBottom: '1.5rem',
+    padding: '1.25rem',
+    backgroundColor: '#fffbef',
+    borderRadius: '0.75rem',
+    border: '1px solid #fed7aa',
   },
   userTypeTitle: {
-    fontSize: '16px',
+    fontSize: '0.875rem',
     fontWeight: '600',
-    marginBottom: '15px',
-    color: '#475569',
+    marginBottom: '0.75rem',
+    color: '#b45309',
     textAlign: 'center',
   },
   userTypeButtons: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '10px',
-    marginBottom: '10px',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
   },
   userTypeButton: {
-    padding: '12px',
-    border: '2px solid #e2e8f0',
+    padding: '0.625rem',
+    border: '2px solid #fed7aa',
     backgroundColor: 'white',
-    borderRadius: '8px',
-    fontSize: '14px',
+    borderRadius: '0.5rem',
+    fontSize: '0.875rem',
     fontWeight: '500',
     cursor: 'pointer',
-    color: '#64748b',
+    color: '#92400e',
     transition: 'all 0.3s',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
-    gap: '5px',
+    justifyContent: 'center',
+    gap: '0.25rem',
   },
   activeUserType: {
-    backgroundColor: '#3b82f6',
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     color: 'white',
-    borderColor: '#3b82f6',
+    borderColor: '#f59e0b',
   },
   userTypeNote: {
-    fontSize: '13px',
-    color: '#94a3b8',
+    fontSize: '0.75rem',
+    color: '#b45309',
     textAlign: 'center',
-    marginTop: '10px',
+    marginTop: '0.5rem',
     fontStyle: 'italic',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '1.25rem',
   },
   inputContainer: {
     display: 'flex',
     flexDirection: 'column',
   },
   label: {
-    marginBottom: '8px',
+    marginBottom: '0.5rem',
     fontWeight: '500',
-    color: '#555',
-    fontSize: '14px',
+    color: '#78350f',
+    fontSize: '0.875rem',
   },
   input: {
-    padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    fontSize: '16px',
-    backgroundColor: '#f8fafc',
-    transition: 'border 0.3s',
+    padding: '0.75rem',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    backgroundColor: '#fffbef',
+    transition: 'all 0.3s',
+    outline: 'none',
+    color: '#78350f',
   },
   passwordOptions: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: '10px',
+    marginTop: '0.5rem',
   },
   rememberLabel: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    fontSize: '14px',
-    color: '#64748b',
+    gap: '0.5rem',
+    fontSize: '0.875rem',
+    color: '#92400e',
+    cursor: 'pointer',
   },
   checkbox: {
-    width: '16px',
-    height: '16px',
+    width: '1rem',
+    height: '1rem',
+    cursor: 'pointer',
+    accentColor: '#f59e0b',
   },
   forgotLink: {
-    fontSize: '14px',
-    color: '#3b82f6',
+    fontSize: '0.875rem',
+    color: '#f59e0b',
     textDecoration: 'none',
   },
   submitButton: {
-    backgroundColor: '#3b82f6',
+    background: 'linear-gradient(135deg, #059669, #10b981)',
     color: 'white',
-    padding: '14px',
+    padding: '0.75rem',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
+    borderRadius: '0.75rem',
+    fontSize: '1rem',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '10px',
-    transition: 'background-color 0.3s',
+    marginTop: '0.5rem',
+    transition: 'all 0.3s',
   },
   registrationInfo: {
-    marginTop: '25px',
+    marginTop: '1.5rem',
   },
   registerText: {
     textAlign: 'center',
-    color: '#666',
-    fontSize: '15px',
+    color: '#92400e',
+    fontSize: '0.875rem',
   },
   registerLink: {
-    color: '#3b82f6',
+    color: '#f59e0b',
     textDecoration: 'none',
     fontWeight: '600',
   },
   adminNote: {
-    backgroundColor: '#fff8e1',
-    border: '1px solid #ffeaa7',
-    borderRadius: '8px',
-    padding: '15px',
-    marginTop: '15px',
+    backgroundColor: '#fffbeb',
+    border: '1px solid #fed7aa',
+    borderRadius: '0.75rem',
+    padding: '1rem',
+    marginTop: '1rem',
   },
   noteTitle: {
-    fontSize: '14px',
+    fontSize: '0.75rem',
     fontWeight: '600',
-    color: '#856404',
-    marginBottom: '8px',
+    color: '#b45309',
+    marginBottom: '0.5rem',
   },
   noteText: {
-    fontSize: '13px',
-    color: '#856404',
-    marginBottom: '5px',
+    fontSize: '0.7rem',
+    color: '#92400e',
+    marginBottom: '0.25rem',
   },
   switchLink: {
-    color: '#3b82f6',
+    color: '#f59e0b',
     textDecoration: 'none',
-    fontSize: '13px',
+    fontSize: '0.7rem',
     fontWeight: '500',
   },
   backLink: {
     display: 'block',
     textAlign: 'center',
-    marginTop: '20px',
-    color: '#666',
+    marginTop: '1.25rem',
+    color: '#92400e',
     textDecoration: 'none',
-    fontSize: '14px',
+    fontSize: '0.875rem',
+    transition: 'color 0.3s',
   },
   disabledButton: {
-    opacity: 0.5,
+    opacity: 0.6,
     cursor: 'not-allowed',
   },
   disabledInput: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#fef3e2',
     cursor: 'not-allowed',
   },
   loadingSpinner: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
+    gap: '0.5rem',
   },
   spinner: {
     display: 'inline-block',
-    width: '20px',
-    height: '20px',
-    border: '3px solid rgba(255,255,255,0.3)',
+    width: '1.125rem',
+    height: '1.125rem',
+    border: '2px solid rgba(255,255,255,0.3)',
     borderRadius: '50%',
     borderTopColor: 'white',
     animation: 'spin 1s ease-in-out infinite',
@@ -622,6 +615,10 @@ style.textContent = `
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
 `
 document.head.appendChild(style)

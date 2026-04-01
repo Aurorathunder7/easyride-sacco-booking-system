@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyRide SACCO - Book Your Journey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        /* Container */
+        .booking-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Header */
+        .page-title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Route Cards */
+        .routes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .route-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .route-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .route-card.selected {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .route-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .route-details {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .route-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .route-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .select-badge {
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Schedule Cards */
+        .schedules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .schedule-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .schedule-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .schedule-card.selected {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .schedule-time {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .schedule-date {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .vehicle-info {
+            text-align: right;
+        }
+
+        .vehicle-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+        }
+
+        .driver-name {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .schedule-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .seat-availability {
+            font-size: 14px;
+        }
+
+        .available-seats {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .capacity {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .schedule-price {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .schedule-price .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .select-schedule-btn {
+            padding: 6px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Seat Map */
+        .seat-map-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .seat-map-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-available { background: #f3f4f6; border: 1px solid #d1d5db; }
+        .legend-selected { background: #10b981; border: 1px solid #059669; }
+        .legend-booked { background: #ef4444; border: 1px solid #dc2626; opacity: 0.6; }
+
+        .seat-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 12px;
+        }
+
+        .seat-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .seat {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .seat-available {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .seat-available:hover {
+            background: #e5e7eb;
+            transform: scale(1.05);
+        }
+
+        .seat-selected {
+            background: #10b981;
+            border-color: #059669;
+            color: white;
+        }
+
+        .seat-booked {
+            background: #ef4444;
+            border-color: #dc2626;
+            color: white;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .driver-seat {
+            background: #374151;
+            color: white;
+            cursor: default;
+        }
+
+        .seat-info {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        /* Passenger Form */
+        .passenger-form {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .form-note {
+            font-size: 12px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* Booking Summary */
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .summary-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .summary-label {
+            color: #64748b;
+        }
+
+        .summary-value {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .summary-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 15px 0;
+        }
+
+        .total-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .total-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .book-button {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .book-button:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .book-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .booking-note {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Empty States */
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            color: #64748b;
+        }
+
+        .small-loader {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .booking-container {
+                padding: 20px 16px;
+            }
+            .page-title {
+                font-size: 24px;
+            }
+            .section-title {
+                font-size: 20px;
+            }
+            .route-card, .schedule-card {
+                padding: 16px;
+            }
+            .seat {
+                width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+            .seat-row {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="booking-container">
+        <h1 class="page-title">Book Your Journey</h1>
+        <p class="page-subtitle">Select route, schedule, and seats</p>
+
+        <!-- Route Selection -->
+        <div class="section">
+            <h2 class="section-title">1. Select Route</h2>
+            <div class="routes-grid" id="routesGrid">
+                <div class="route-card selected" data-route="1">
+                    <div class="route-name">Nairobi → Mombasa</div>
+                    <div class="route-details">
+                        <span>⏱️ 8 hours</span>
+                        <span>📏 480 km</span>
+                    </div>
+                    <div class="route-footer">
+                        <span class="route-price">KSh 1,200</span>
+                        <span class="select-badge">✓ Selected</span>
+                    </div>
+                </div>
+                <div class="route-card" data-route="2">
+                    <div class="route-name">Nairobi → Kisumu</div>
+                    <div class="route-details">
+                        <span>⏱️ 6 hours</span>
+                        <span>📏 350 km</span>
+                    </div>
+                    <div class="route-footer">
+                        <span class="route-price">KSh 800</span>
+                        <span class="select-badge">Select Route</span>
+                    </div>
+                </div>
+                <div class="route-card" data-route="3">
+                    <div class="route-name">Nairobi → Nakuru</div>
+                    <div class="route-details">
+                        <span>⏱️ 3 hours</span>
+                        <span>📏 160 km</span>
+                    </div>
+                    <div class="route-footer">
+                        <span class="route-price">KSh 500</span>
+                        <span class="select-badge">Select Route</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Selection -->
+        <div class="section">
+            <h2 class="section-title">2. Select Schedule</h2>
+            <div class="schedules-list" id="schedulesList">
+                <div class="schedule-card selected" data-schedule="1">
+                    <div class="schedule-header">
+                        <div>
+                            <div class="schedule-time">8:00 AM → 4:00 PM</div>
+                            <div class="schedule-date">Sat, Mar 15, 2025</div>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-name">Toyota Hiace (KCA 123A)</div>
+                            <div class="driver-name">Driver: James Kamau</div>
+                        </div>
+                    </div>
+                    <div class="schedule-footer">
+                        <div class="seat-availability">
+                            <span class="available-seats">8 seats available</span>
+                            <span class="capacity">(Capacity: 14)</span>
+                        </div>
+                        <div class="schedule-price">
+                            <span class="price">KSh 1,200</span>
+                            <button class="select-schedule-btn">Selected</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-card" data-schedule="2">
+                    <div class="schedule-header">
+                        <div>
+                            <div class="schedule-time">10:30 AM → 6:30 PM</div>
+                            <div class="schedule-date">Sat, Mar 15, 2025</div>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-name">Nissan Civilian (KBB 456B)</div>
+                            <div class="driver-name">Driver: Peter Ochieng</div>
+                        </div>
+                    </div>
+                    <div class="schedule-footer">
+                        <div class="seat-availability">
+                            <span class="available-seats">15 seats available</span>
+                            <span class="capacity">(Capacity: 25)</span>
+                        </div>
+                        <div class="schedule-price">
+                            <span class="price">KSh 1,200</span>
+                            <button class="select-schedule-btn">Select</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-card" data-schedule="3">
+                    <div class="schedule-header">
+                        <div>
+                            <div class="schedule-time">2:00 PM → 10:00 PM</div>
+                            <div class="schedule-date">Sat, Mar 15, 2025</div>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-name">Toyota Hiace (KDA 789C)</div>
+                            <div class="driver-name">Driver: Michael Wanjiku</div>
+                        </div>
+                    </div>
+                    <div class="schedule-footer">
+                        <div class="seat-availability">
+                            <span class="available-seats">3 seats available</span>
+                            <span class="capacity">(Capacity: 14)</span>
+                        </div>
+                        <div class="schedule-price">
+                            <span class="price">KSh 1,200</span>
+                            <button class="select-schedule-btn">Select</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seat Selection -->
+        <div class="section">
+            <h2 class="section-title">3. Select Seats</h2>
+            <div class="seat-map-container">
+                <div class="seat-map-title">
+                    <span>Seat Map - 14 Seater Matatu</span>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-box legend-available"></div><span>Available</span></div>
+                        <div class="legend-item"><div class="legend-box legend-selected"></div><span>Selected</span></div>
+                        <div class="legend-item"><div class="legend-box legend-booked"></div><span>Booked</span></div>
+                        <div class="legend-item"><div class="legend-box" style="background:#374151"></div><span>Driver</span></div>
+                    </div>
+                </div>
+                <div class="seat-grid" id="seatGrid">
+                    <div class="seat-row">
+                        <div class="seat driver-seat">🚗</div>
+                        <div class="seat seat-available" data-seat="1">1</div>
+                        <div class="seat seat-available" data-seat="2">2</div>
+                        <div class="seat seat-available" data-seat="3">3</div>
+                        <div class="seat seat-available" data-seat="4">4</div>
+                    </div>
+                    <div class="seat-row">
+                        <div class="seat seat-booked" data-seat="5">5</div>
+                        <div class="seat seat-booked" data-seat="6">6</div>
+                        <div class="seat seat-available" data-seat="7">7</div>
+                        <div class="seat seat-available" data-seat="8">8</div>
+                        <div class="seat seat-available" data-seat="9">9</div>
+                    </div>
+                    <div class="seat-row">
+                        <div class="seat seat-available" data-seat="10">10</div>
+                        <div class="seat seat-available" data-seat="11">11</div>
+                        <div class="seat seat-booked" data-seat="12">12</div>
+                        <div class="seat seat-available" data-seat="13">13</div>
+                        <div class="seat seat-available" data-seat="14">14</div>
+                    </div>
+                </div>
+                <div class="seat-info" id="seatInfo">Selected: None</div>
+            </div>
+        </div>
+
+        <!-- Passenger Details -->
+        <div class="section">
+            <h2 class="section-title">4. Passenger Details</h2>
+            <div class="passenger-form">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="passengerName" placeholder="John Doe" value="John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="passengerPhone" placeholder="0712345678" value="0712345678">
+                        <div class="input-hint">For M-Pesa payment and ticket</div>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="passengerEmail" placeholder="john@example.com" value="john@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label>ID/Passport Number</label>
+                        <input type="text" id="passengerId" placeholder="National ID or Passport" value="12345678">
+                    </div>
+                </div>
+                <div class="form-note">* Required fields. M-Pesa payment will be sent to provided phone number.</div>
+            </div>
+        </div>
+
+        <!-- Booking Summary -->
+        <div class="summary-card">
+            <h2 class="summary-title">Booking Summary</h2>
+            <div class="summary-row">
+                <span class="summary-label">Route:</span>
+                <span class="summary-value">Nairobi → Mombasa</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Departure:</span>
+                <span class="summary-value">Sat, Mar 15, 2025 at 8:00 AM</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Vehicle:</span>
+                <span class="summary-value">Toyota Hiace (KCA 123A)</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Selected Seats:</span>
+                <span class="summary-value" id="selectedSeatsSummary">None</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Price per seat:</span>
+                <span class="summary-value">KSh 1,200</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Number of seats:</span>
+                <span class="summary-value" id="seatCount">0</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row">
+                <span class="total-label">Total Amount:</span>
+                <span class="total-value" id="totalAmount">KSh 0</span>
+            </div>
+            <button class="book-button" id="bookButton">💳 Pay via M-Pesa</button>
+            <div class="booking-note">After confirmation, you'll receive an M-Pesa prompt. Your ticket will be sent via SMS.</div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let selectedSeats = [];
+        const seatPrice = 1200;
+
+        // DOM Elements
+        const seatGrid = document.getElementById('seatGrid');
+        const seatInfo = document.getElementById('seatInfo');
+        const selectedSeatsSummary = document.getElementById('selectedSeatsSummary');
+        const seatCountSpan = document.getElementById('seatCount');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const bookButton = document.getElementById('bookButton');
+
+        // Seat Click Handler
+        function handleSeatClick(seatElement, seatNumber) {
+            if (seatElement.classList.contains('seat-booked')) return;
+            
+            if (seatElement.classList.contains('seat-selected')) {
+                // Deselect
+                seatElement.classList.remove('seat-selected');
+                seatElement.classList.add('seat-available');
+                selectedSeats = selectedSeats.filter(s => s !== seatNumber);
+            } else {
+                // Select (max 5 seats)
+                if (selectedSeats.length >= 5) {
+                    alert('Maximum 5 seats per booking');
+                    return;
+                }
+                seatElement.classList.remove('seat-available');
+                seatElement.classList.add('seat-selected');
+                selectedSeats.push(seatNumber);
+            }
+            
+            updateSummary();
+        }
+
+        // Update Summary
+        function updateSummary() {
+            const seatCount = selectedSeats.length;
+            const total = seatCount * seatPrice;
+            
+            if (seatCount === 0) {
+                seatInfo.textContent = 'Selected: None';
+                selectedSeatsSummary.textContent = 'None';
+            } else {
+                seatInfo.textContent = `Selected: ${selectedSeats.sort((a,b) => a-b).join(', ')}`;
+                selectedSeatsSummary.textContent = selectedSeats.sort((a,b) => a-b).join(', ');
+            }
+            
+            seatCountSpan.textContent = seatCount;
+            totalAmountSpan.textContent = `KSh ${total.toLocaleString()}`;
+            
+            // Update button text
+            if (seatCount === 0) {
+                bookButton.textContent = 'Select Seats First';
+                bookButton.disabled = true;
+            } else {
+                bookButton.textContent = `💳 Pay KSh ${total.toLocaleString()} via M-Pesa`;
+                bookButton.disabled = false;
+            }
+        }
+
+        // Initialize Seats
+        function initSeats() {
+            const seats = document.querySelectorAll('.seat[data-seat]');
+            seats.forEach(seat => {
+                const seatNumber = parseInt(seat.dataset.seat);
+                seat.addEventListener('click', () => handleSeatClick(seat, seatNumber));
+            });
+        }
+
+        // Route Selection
+        const routeCards = document.querySelectorAll('.route-card');
+        routeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                routeCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                // Update selected route in summary
+                const routeName = card.querySelector('.route-name').textContent;
+                const routePrice = card.querySelector('.route-price').textContent;
+                document.querySelector('.summary-row:first-child .summary-value').textContent = routeName;
+            });
+        });
+
+        // Schedule Selection
+        const scheduleCards = document.querySelectorAll('.schedule-card');
+        scheduleCards.forEach(card => {
+            const selectBtn = card.querySelector('.select-schedule-btn');
+            card.addEventListener('click', (e) => {
+                if (e.target === selectBtn) return;
+                scheduleCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                
+                // Update select button text
+                scheduleCards.forEach(c => {
+                    const btn = c.querySelector('.select-schedule-btn');
+                    btn.textContent = 'Select';
+                    btn.style.background = '#3b82f6';
+                });
+                selectBtn.textContent = 'Selected';
+                selectBtn.style.background = '#10b981';
+                
+                // Update summary
+                const time = card.querySelector('.schedule-time').textContent;
+                const date = card.querySelector('.schedule-date').textContent;
+                const vehicle = card.querySelector('.vehicle-name').textContent;
+                document.querySelector('.summary-row:nth-child(2) .summary-value').textContent = `${date} at ${time}`;
+                document.querySelector('.summary-row:nth-child(3) .summary-value').textContent = vehicle;
+            });
+        });
+
+        // Book Button
+        bookButton.addEventListener('click', () => {
+            const name = document.getElementById('passengerName').value;
+            const phone = document.getElementById('passengerPhone').value;
+            
+            if (!name || !phone) {
+                alert('Please fill in passenger details');
+                return;
+            }
+            
+            if (selectedSeats.length === 0) {
+                alert('Please select at least one seat');
+                return;
+            }
+            
+            alert(`✅ Booking confirmed!\n\nCustomer: ${name}\nPhone: ${phone}\nSeats: ${selectedSeats.join(', ')}\nTotal: ${totalAmountSpan.textContent}\n\nM-Pesa prompt sent to ${phone}`);
+        });
+
+        // Initialize
+        initSeats();
+        updateSummary();
+    </script>
+</body>
+</html>

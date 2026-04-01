@@ -44,12 +44,6 @@ function Header() {
     localStorage.removeItem('loginTime')
     localStorage.removeItem('rememberedEmail')
     
-    // Optional: Call logout API to invalidate token on server
-    // fetch(`${API_BASE_URL}/auth/logout`, {
-    //   method: 'POST',
-    //   headers: { 'Authorization': `Bearer ${token}` }
-    // })
-    
     // Redirect to login page
     navigate('/login')
   }
@@ -88,14 +82,10 @@ function Header() {
                   </>
                 )}
                 
-                {/* Admin Navigation */}
+                {/* Admin Navigation - Only the main admin panel link */}
                 {isAdmin && (
                   <>
                     <li><Link to="/admin" style={styles.link}>⚙️ Admin Panel</Link></li>
-                    <li><Link to="/admin/operators" style={styles.link}>👥 Operators</Link></li>
-                    <li><Link to="/admin/vehicles" style={styles.link}>🚌 Vehicles</Link></li>
-                    <li><Link to="/admin/routes" style={styles.link}>🗺️ Routes</Link></li>
-                    <li><Link to="/admin/reports" style={styles.link}>📊 Reports</Link></li>
                   </>
                 )}
               </>

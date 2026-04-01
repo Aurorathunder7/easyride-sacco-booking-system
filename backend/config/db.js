@@ -16,51 +16,56 @@ const caCertPath = path.join(__dirname, '../ca.pem');
 console.log('🔐 Looking for CA certificate at:', caCertPath);
 
 // Check if CA certificate exists
-let caCert = null;
+let sslConfig = {};
 if (fs.existsSync(caCertPath)) {
-  caCert = fs.readFileSync(caCertPath);
+  const caCert = fs.readFileSync(caCertPath);
   console.log('✅ CA certificate found and loaded');
+  sslConfig = {
+    ssl: {
+      ca: caCert,
+      rejectUnauthorized: true
+    }
+  };
 } else {
   console.warn('⚠️ CA certificate not found at:', caCertPath);
   console.warn('💡 Download it from Aiven Console and save as ca.pem in backend folder');
+  console.warn('⚠️ Using SSL without verification (less secure)');
+  sslConfig = {
+    ssl: {
+      rejectUnauthorized: false
+    }
+  };
 }
 
-// Create connection pool with SSL certificate
+// Create connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: caCert ? {
-    ca: caCert,
-    rejectUnauthorized: true
-  } : {
-    rejectUnauthorized: false // Fallback - less secure but might work
-  }
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+  ...sslConfig
 });
 
-// Test database connection with better error handling
+// Test database connection function
 const testConnection = async () => {
+  let connection;
   try {
     console.log('🔄 Attempting to connect to Aiven MySQL...');
-    console.log(`  Host: ${process.env.DB_HOST}`);
-    console.log(`  Port: ${process.env.DB_PORT}`);
-    console.log(`  User: ${process.env.DB_USER}`);
-    console.log(`  Database: ${process.env.DB_NAME}`);
-    console.log(`  SSL: ${caCert ? 'Using CA certificate' : 'No certificate (may fail)'}`);
     
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     console.log('✅✅✅ Database connected successfully to Aiven MySQL! ✅✅✅');
     
     // Test a simple query
     const [result] = await connection.query('SELECT 1 + 1 AS solution');
     console.log('📊 Test query result:', result[0].solution === 2 ? '✅ Working' : '❌ Failed');
     
-    // Check if customers table exists
+    // Check tables
     const [tables] = await connection.query('SHOW TABLES');
     if (tables.length > 0) {
       console.log('📊 Tables in database:', tables.map(t => Object.values(t)[0]).join(', '));
@@ -68,7 +73,6 @@ const testConnection = async () => {
       console.log('📊 No tables found in database yet');
     }
     
-    connection.release();
     return true;
   } catch (error) {
     console.error('❌❌❌ Database connection failed! ❌❌❌');
@@ -83,14 +87,22 @@ const testConnection = async () => {
       console.error('💡 Tip: Check your hostname - it might be incorrect');
     } else if (error.message.includes('SSL') || error.code === 'HANDSHAKE_SSL_ERROR') {
       console.error('💡 Tip: SSL connection issue - make sure ca.pem file is in backend folder');
-      console.error('💡 Download from: Aiven Console → Your MySQL Service → Overview → CA Certificate');
     }
     
     return false;
+  } finally {
+    if (connection) connection.release();
   }
 };
 
-// Run the test immediately
-testConnection();
+// Run the test but don't block module export
+testConnection().then(success => {
+  if (success) {
+    console.log('🚀 Database is ready for queries');
+  } else {
+    console.error('⚠️ Database connection failed - queries may not work');
+  }
+});
 
+// Export the pool immediately (don't wait for test)
 module.exports = pool;

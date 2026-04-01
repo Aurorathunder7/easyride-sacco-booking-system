@@ -97,6 +97,15 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // Check if JWT_SECRET is set
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET is not set in environment variables!');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Server configuration error' 
+      });
+    }
+
     let user = null;
     let table = '';
     let idField = '';
@@ -164,7 +173,7 @@ router.post('/login', async (req, res) => {
 
     console.log('✅ Password matched for:', email);
 
-    // Generate JWT token
+    // Generate JWT token using ONLY environment variable
     const token = jwt.sign(
       { 
         id: user[idField], 
@@ -172,9 +181,11 @@ router.post('/login', async (req, res) => {
         email: user[emailField],
         name: user[nameField]
       },
-      process.env.JWT_SECRET || 'your-secret-key-change-this',
+      process.env.JWT_SECRET,  // ← ONLY use environment variable, no fallback
       { expiresIn: '30d' }
     );
+
+    console.log('✅ Token generated successfully');
 
     // Create safe user object without password
     const userResponse = {
@@ -184,13 +195,6 @@ router.post('/login', async (req, res) => {
       phone: user.phoneNumber || user.phoneNum,
       role: role
     };
-
-    // Add role-specific fields if needed
-    if (role === 'customer') {
-      userResponse.custID = user.custID;
-    } else if (role === 'operator') {
-      userResponse.opID = user.opID;
-    }
 
     console.log('✅ Login successful for:', email);
 

@@ -1,6 +1,18 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+// Load environment variables FIRST
+dotenv.config();
+
+// Verify JWT_SECRET is loaded
+console.log('🔑 JWT_SECRET loaded:', process.env.JWT_SECRET ? 'Yes' : 'No');
+if (!process.env.JWT_SECRET) {
+    console.error('❌ JWT_SECRET is not set in .env file!');
+    process.exit(1);
+}
+
+const app = express();
 
 // Import all route files
 const authRoutes = require('./routes/auth');
@@ -10,9 +22,6 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const mpesaRoutes = require('./routes/mpesaRoutes');
 const pdfRoutes = require('./routes/pdfRoutes');
-//const smsRoutes = require('./routes/smsRoutes');
-
-const app = express();
 
 // Middleware
 app.use(cors());
@@ -26,7 +35,6 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/mpesa', mpesaRoutes);
 app.use('/api/pdf', pdfRoutes);
-//app.use('/api/sms', smsRoutes);
 
 // Test route
 app.get('/', (req, res) => {

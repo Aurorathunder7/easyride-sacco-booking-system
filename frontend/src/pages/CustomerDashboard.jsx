@@ -155,9 +155,9 @@ const CustomerDashboard = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
@@ -170,14 +170,14 @@ const CustomerDashboard = () => {
   
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-md p-8 max-w-md text-center">
           <div className="text-5xl mb-4">😕</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Oops!</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700"
           >
             Try Again
           </button>
@@ -191,7 +191,7 @@ const CustomerDashboard = () => {
   // ============================
   
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header with user name */}
         <div className="mb-8">
@@ -203,12 +203,12 @@ const CustomerDashboard = () => {
           </p>
         </div>
         
-        {/* Stats Cards - Now with real data */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Cards - Main Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
           {/* Total Bookings */}
-          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <span className="text-2xl">🚌</span>
               </div>
               <div className="ml-4">
@@ -219,9 +219,9 @@ const CustomerDashboard = () => {
           </div>
           
           {/* Total Spent */}
-          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                 <span className="text-2xl">💰</span>
               </div>
               <div className="ml-4">
@@ -232,9 +232,9 @@ const CustomerDashboard = () => {
           </div>
           
           {/* Upcoming Trips */}
-          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-lg">
+              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
                 <span className="text-2xl">📅</span>
               </div>
               <div className="ml-4">
@@ -245,9 +245,9 @@ const CustomerDashboard = () => {
           </div>
           
           {/* Completed Trips */}
-          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                 <span className="text-2xl">✓</span>
               </div>
               <div className="ml-4">
@@ -258,29 +258,29 @@ const CustomerDashboard = () => {
           </div>
         </div>
         
-        {/* Additional Stats Row (Optional) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Additional Stats Row - Pending and Cancelled */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           {/* Pending Bookings */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Pending Bookings</p>
                 <p className="text-3xl font-bold text-gray-800">{stats.pendingBookings}</p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                 <span className="text-2xl">⏳</span>
               </div>
             </div>
           </div>
           
           {/* Cancelled Bookings */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Cancelled Bookings</p>
                 <p className="text-3xl font-bold text-gray-800">{stats.cancelledBookings}</p>
               </div>
-              <div className="p-3 bg-red-100 rounded-full">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <span className="text-2xl">❌</span>
               </div>
             </div>
@@ -288,54 +288,46 @@ const CustomerDashboard = () => {
         </div>
         
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           <Link
             to="/book"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-blue-500 transform hover:-translate-y-1"
+            className="bg-white rounded-xl shadow-sm p-5 text-center hover:shadow-md transition-all border-2 border-transparent hover:border-blue-500"
           >
-            <div className="text-center">
-              <div className="text-4xl mb-3">🚌</div>
-              <h3 className="font-semibold text-gray-800 mb-2">Book a Trip</h3>
-              <p className="text-sm text-gray-600">Find and book matatu seats</p>
-            </div>
+            <div className="text-4xl mb-3">🚌</div>
+            <h3 className="font-semibold text-gray-800 mb-1">Book a Trip</h3>
+            <p className="text-sm text-gray-500">Find and book matatu seats</p>
           </Link>
           
           <Link
             to="/my-bookings"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-blue-500 transform hover:-translate-y-1"
+            className="bg-white rounded-xl shadow-sm p-5 text-center hover:shadow-md transition-all border-2 border-transparent hover:border-blue-500"
           >
-            <div className="text-center">
-              <div className="text-4xl mb-3">📋</div>
-              <h3 className="font-semibold text-gray-800 mb-2">My Bookings</h3>
-              <p className="text-sm text-gray-600">View and manage bookings</p>
-            </div>
+            <div className="text-4xl mb-3">📋</div>
+            <h3 className="font-semibold text-gray-800 mb-1">My Bookings</h3>
+            <p className="text-sm text-gray-500">View and manage bookings</p>
           </Link>
           
           <Link
             to="/payments"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-blue-500 transform hover:-translate-y-1"
+            className="bg-white rounded-xl shadow-sm p-5 text-center hover:shadow-md transition-all border-2 border-transparent hover:border-blue-500"
           >
-            <div className="text-center">
-              <div className="text-4xl mb-3">💰</div>
-              <h3 className="font-semibold text-gray-800 mb-2">Payment History</h3>
-              <p className="text-sm text-gray-600">View payment records</p>
-            </div>
+            <div className="text-4xl mb-3">💰</div>
+            <h3 className="font-semibold text-gray-800 mb-1">Payment History</h3>
+            <p className="text-sm text-gray-500">View payment records</p>
           </Link>
           
           <Link
             to="/profile"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-blue-500 transform hover:-translate-y-1"
+            className="bg-white rounded-xl shadow-sm p-5 text-center hover:shadow-md transition-all border-2 border-transparent hover:border-blue-500"
           >
-            <div className="text-center">
-              <div className="text-4xl mb-3">👤</div>
-              <h3 className="font-semibold text-gray-800 mb-2">Profile</h3>
-              <p className="text-sm text-gray-600">Update your information</p>
-            </div>
+            <div className="text-4xl mb-3">👤</div>
+            <h3 className="font-semibold text-gray-800 mb-1">Profile</h3>
+            <p className="text-sm text-gray-500">Update your information</p>
           </Link>
         </div>
         
-        {/* Recent Bookings - Now with real data */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        {/* Recent Bookings Section */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Recent Bookings</h2>
             <Link
@@ -350,7 +342,7 @@ const CustomerDashboard = () => {
           {bookings.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🎫</div>
-              <p className="text-gray-500 mb-4 text-lg">No bookings yet.</p>
+              <p className="text-gray-500 mb-2 text-lg">No bookings yet.</p>
               <p className="text-gray-400 mb-6">Start your journey with EasyRide SACCO</p>
               <Link
                 to="/book"
@@ -360,18 +352,18 @@ const CustomerDashboard = () => {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {bookings.map((booking) => (
                 <div
                   key={booking.bookingID || booking.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-800">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-800 mb-2">
                         {booking.route || `${booking.origin} to ${booking.destination}`}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <span>📅</span> {formatDate(booking.travelDate || booking.date)}
                         </span>
@@ -388,7 +380,7 @@ const CustomerDashboard = () => {
                         )}
                       </div>
                     </div>
-                    <div className="mt-3 md:mt-0 flex items-center gap-3">
+                    <div className="flex items-center gap-3">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(booking.status)}`}>
                         {booking.status}
                       </span>

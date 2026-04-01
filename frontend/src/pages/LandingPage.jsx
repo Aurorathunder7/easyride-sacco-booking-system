@@ -1,15 +1,10 @@
-
 import React from 'react'
-
-// Import a hook from React Router that lets us navigate between pages programmatically
 import { useNavigate } from 'react-router-dom'
 
-// LandingPage - this is the homepage of our app
 function LandingPage() {
   const navigate = useNavigate()
   return (
     <div style={styles.container}>
-      {}
       <div style={styles.hero}>
         <div style={styles.heroContent}>
           {/* Logo section with bus emoji and company name */}
@@ -33,13 +28,10 @@ function LandingPage() {
             
             {/* Container that holds all feature cards in a grid layout */}
             <div style={styles.features}>
-
               {/* PASSENGER CARD - first column */}
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}>👤</div>
                 <h4 style={styles.featureTitle}>For Passengers</h4>
-
-                {/* List of passenger features */}
                 <div style={styles.featureList}>
                   <div style={styles.featureListItem}>✓ Search and book available routes</div>
                   <div style={styles.featureListItem}>✓ Select seats with visual seat map</div>
@@ -53,8 +45,6 @@ function LandingPage() {
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}>🏢</div>
                 <h4 style={styles.featureTitle}>For Operators</h4>
-
-                {/* List of operator features */}
                 <div style={styles.featureList}>
                   <div style={styles.featureListItem}>✓ Book tickets on behalf of customers</div>
                   <div style={styles.featureListItem}>✓ Manage customer bookings</div>
@@ -67,8 +57,6 @@ function LandingPage() {
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}>🛡️</div>
                 <h4 style={styles.featureTitle}>Secure & Reliable</h4>
-                
-                {/* List of system features/benefits */}
                 <div style={styles.featureList}>
                   <div style={styles.featureListItem}>✓ Secure user authentication</div>
                   <div style={styles.featureListItem}>✓ Real-time seat availability</div>
@@ -80,10 +68,8 @@ function LandingPage() {
             </div>
           </div>
           
-          
           {/* Action Buttons - main call-to-action section */}
           <div style={styles.actions}>
-            {/* Primary login/register buttons - large and prominent */}
             <div style={styles.primaryActions}>
               <button 
                 style={styles.loginButton}
@@ -99,11 +85,9 @@ function LandingPage() {
               </button>
             </div>
             
-            {/* Secondary options for operators and admins */}
             <div style={styles.registerOptions}>
               <p style={styles.registerPrompt}>Need operator access?</p>
               <div style={styles.registerButtons}>
-                {/* Operator button shows alert then redirects to login */}
                 <button 
                   style={styles.registerOperatorButton}
                   onClick={() => {
@@ -113,7 +97,6 @@ function LandingPage() {
                 >
                   🏢 Operator Login
                 </button>
-                {/* Admin button shows alert then redirects to login */}
                 <button 
                   style={styles.registerAdminButton}
                   onClick={() => {
@@ -127,7 +110,7 @@ function LandingPage() {
             </div>
           </div>
           
-          {/* Quick Footer Stats - displays impressive numbers to build trust */}
+          {/* Quick Footer Stats */}
           <div style={styles.stats}>
             <div style={styles.statItem}>
               <div style={styles.statNumber}>500+</div>
@@ -145,10 +128,8 @@ function LandingPage() {
         </div>
       </div>
       
-      {/* Footer - appears at the bottom of the page */}
       <footer style={styles.footer}>
         <div style={styles.footerContent}>
-          {/* Copyright notice */}
           <p style={styles.footerText}>
             © 2025 EasyRide SACCO. All rights reserved.
           </p>
@@ -158,13 +139,11 @@ function LandingPage() {
   )
 }
 
-// STYLES OBJECT - Contains all CSS styles for the component
-// Each property defines how different elements should look
+// STYLES OBJECT - Warm Cream/Amber Theme
 const styles = {
-  
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f8fafc',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -175,14 +154,13 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '40px 20px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #fef9e8, #fff5e6, #fef3e2)',
   },
 
   heroContent: {
     maxWidth: '1200px',
     width: '100%',
     textAlign: 'center',
-    color: 'white',
   },
 
   logo: {
@@ -195,12 +173,16 @@ const styles = {
   logoIcon: {
     fontSize: '60px',
     marginBottom: '15px',
+    animation: 'bounce 1s ease infinite',
   },
 
   logoText: {
     fontSize: '36px',
     fontWeight: 'bold',
     margin: 0,
+    background: 'linear-gradient(135deg, #d97706, #f59e0b, #fbbf24)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   },
 
   heroTitle: {
@@ -208,30 +190,31 @@ const styles = {
     fontWeight: 'bold',
     marginBottom: '20px',
     lineHeight: 1.3,
+    color: '#78350f',
   },
 
   heroSubtitle: {
     fontSize: '18px',
-    opacity: 0.9,
     maxWidth: '800px',
     margin: '0 auto 40px',
     lineHeight: 1.6,
+    color: '#92400e',
   },
 
   overview: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)', // Creates frosted glass effect
+    backgroundColor: '#fffbef',
     borderRadius: '20px',
     padding: '40px',
     marginBottom: '40px',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
+    border: '1px solid #fed7aa',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
   },
 
   overviewTitle: {
     fontSize: '24px',
     fontWeight: 'bold',
     marginBottom: '30px',
-    color: 'white',
+    color: '#78350f',
   },
 
   features: {
@@ -242,15 +225,13 @@ const styles = {
   },
 
   featureCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'white',
     borderRadius: '15px',
     padding: '25px',
     textAlign: 'left',
-    backdropFilter: 'blur(5px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
+    border: '1px solid #fed7aa',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+    transition: 'transform 0.3s, box-shadow 0.3s',
   },
 
   featureIcon: {
@@ -263,7 +244,7 @@ const styles = {
     fontSize: '20px',
     fontWeight: '600',
     marginBottom: '15px',
-    color: 'white',
+    color: '#78350f',
     textAlign: 'center',
   },
 
@@ -278,54 +259,10 @@ const styles = {
     marginBottom: '8px',
     paddingLeft: '20px',
     position: 'relative',
-    opacity: 0.9,
     lineHeight: 1.5,
+    color: '#92400e',
   },
 
-  featureAction: {
-    marginTop: '20px',
-    textAlign: 'center',
-  },
-  // Green button for passenger registration
-  featureButton: {
-    backgroundColor: '#10b981',
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    width: '100%',
-    transition: 'all 0.3s',
-  },
-  // Purple button for operator contact
-  featureButtonSecondary: {
-    backgroundColor: '#8b5cf6',
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    width: '100%',
-    transition: 'all 0.3s',
-  },
-  // Blue button for login
-  featureButtonTertiary: {
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    width: '100%',
-    transition: 'all 0.3s',
-  },
-  // Actions container
   actions: {
     marginBottom: '40px',
   },
@@ -337,9 +274,9 @@ const styles = {
     marginBottom: '30px',
     flexWrap: 'wrap',
   },
-  // Large blue login button
+
   loginButton: {
-    backgroundColor: '#3b82f6',
+    background: 'linear-gradient(135deg, #059669, #10b981)',
     color: 'white',
     padding: '18px 40px',
     border: 'none',
@@ -352,12 +289,12 @@ const styles = {
     justifyContent: 'center',
     gap: '10px',
     transition: 'transform 0.3s, box-shadow 0.3s',
-    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 10px 20px rgba(5, 150, 105, 0.2)',
     minWidth: '250px',
   },
-  // Large green register button
+
   registerButton: {
-    backgroundColor: '#10b981',
+    background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     color: 'white',
     padding: '18px 40px',
     border: 'none',
@@ -370,33 +307,34 @@ const styles = {
     justifyContent: 'center',
     gap: '10px',
     transition: 'transform 0.3s, box-shadow 0.3s',
-    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 10px 20px rgba(245, 158, 11, 0.2)',
     minWidth: '250px',
   },
-  // Secondary options container - semi-transparent background
+
   registerOptions: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#fffbef',
     borderRadius: '15px',
     padding: '25px',
     maxWidth: '500px',
     margin: '0 auto',
+    border: '1px solid #fed7aa',
   },
-  // Prompt text
+
   registerPrompt: {
     fontSize: '16px',
     marginBottom: '15px',
-    opacity: 0.9,
+    color: '#92400e',
   },
-  // Secondary buttons container
+
   registerButtons: {
     display: 'flex',
     gap: '15px',
     justifyContent: 'center',
     flexWrap: 'wrap',
   },
-  // Purple operator button
+
   registerOperatorButton: {
-    backgroundColor: '#8b5cf6',
+    background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
     color: 'white',
     padding: '12px 25px',
     border: 'none',
@@ -409,9 +347,9 @@ const styles = {
     gap: '8px',
     transition: 'transform 0.2s',
   },
-  // Indigo admin button
+
   registerAdminButton: {
-    backgroundColor: '#6366f1',
+    background: 'linear-gradient(135deg, #6366f1, #818cf8)',
     color: 'white',
     padding: '12px 25px',
     border: 'none',
@@ -424,45 +362,46 @@ const styles = {
     gap: '8px',
     transition: 'transform 0.2s',
   },
-  // Stats grid
+
   stats: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
     gap: '20px',
     marginTop: '40px',
   },
-  // Individual stats card(column) - frosted glass
+
   statItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#fffbef',
     borderRadius: '12px',
     padding: '20px',
-    backdropFilter: 'blur(5px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid #fed7aa',
+    transition: 'transform 0.3s',
   },
-  // Stat number
+
   statNumber: {
     fontSize: '32px',
     fontWeight: 'bold',
     marginBottom: '5px',
+    color: '#d97706',
   },
-  // Stat label
+
   statLabel: {
     fontSize: '14px',
-    opacity: 0.9,
+    color: '#92400e',
   },
-  // Footer
+
   footer: {
-    backgroundColor: '#1e293b',
+    backgroundColor: '#78350f',
     color: 'white',
     padding: '30px 20px',
   },
-  // Footer content container
+
   footerContent: {
     maxWidth: '1200px',
     margin: '0 auto',
     textAlign: 'center',
   },
-  // Footer text
+
   footerText: {
     fontSize: '16px',
     marginBottom: '10px',
@@ -470,8 +409,8 @@ const styles = {
   },
 }
 
-// Function to add hover effects via CSS
-const addHoverEffects = () => {
+// Add hover effects and animations
+const addStyles = () => {
   const style = document.createElement('style')
   style.textContent = `
     button:hover {
@@ -479,26 +418,48 @@ const addHoverEffects = () => {
       transform: translateY(-2px);
     }
     .login-button:hover {
-      background-color: #2563eb;
+      background: linear-gradient(135deg, #047857, #059669);
     }
     .register-button:hover {
-      background-color: #059669;
+      background: linear-gradient(135deg, #d97706, #f59e0b);
     }
     .register-operator-button:hover {
-      background-color: #7c3aed;
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
     }
     .register-admin-button:hover {
-      background-color: #4f46e5;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
     }
-    .feature-button:hover {
-      opacity: 0.9;
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+    .stat-item:hover {
+      transform: translateY(-2px);
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .feature-card, .stat-item {
+      animation: slideIn 0.5s ease-out;
     }
   `
   document.head.appendChild(style)
 }
-// Initialize hover effects
+
+// Initialize styles
 if (typeof window !== 'undefined') {
-  addHoverEffects()
+  addStyles()
 }
 
 export default LandingPage
