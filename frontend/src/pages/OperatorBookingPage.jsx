@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import SeatMap from '../components/SeatMap'
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+import apiFetch from '../utils/api'
 
 function OperatorBookingPage() {
   const navigate = useNavigate()
@@ -122,15 +120,8 @@ function OperatorBookingPage() {
   
   const fetchInitialData = async () => {
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/bookings/routes`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) throw new Error('Failed to fetch routes')
-      
-      const data = await response.json()
+      // Using apiFetch to get routes
+      const data = await apiFetch('/bookings/routes')
       setRoutes(data.routes || [])
       
     } catch (error) {
@@ -144,18 +135,13 @@ function OperatorBookingPage() {
   const fetchSchedulesForRoute = async (routeId, date, retryDate = null) => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
       let dateToUse = date || selectedDate
       
       console.log(`🔍 Fetching schedules for route: ${routeId}, date: ${dateToUse}`)
       
-      const response = await fetch(`${API_BASE_URL}/bookings/schedules?routeId=${routeId}&date=${dateToUse}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      // Using apiFetch to get schedules
+      const data = await apiFetch(`/bookings/schedules?routeId=${routeId}&date=${dateToUse}`)
       
-      if (!response.ok) throw new Error('Failed to fetch schedules')
-      
-      const data = await response.json()
       console.log('📅 Schedules response:', data)
       
       // Filter out schedules that have already passed for today
@@ -203,21 +189,16 @@ function OperatorBookingPage() {
     }
     
     try {
-      const token = localStorage.getItem('token')
+      // Using apiFetch to search customer
+      const data = await apiFetch(`/operators/customers/search?q=${encodeURIComponent(customerDetails.phone)}`)
       
-      const response = await fetch(`${API_BASE_URL}/operators/customers/search?q=${customerDetails.phone}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.customers && data.customers.length > 0) {
-          setSearchResults(data.customers)
-          setShowSearchResults(true)
-        }
+      if (data.customers && data.customers.length > 0) {
+        setSearchResults(data.customers)
+        setShowSearchResults(true)
       }
     } catch (error) {
       console.error('Search error:', error)
+      // Silently fail - customer not found is fine
     }
   }
 
@@ -251,21 +232,14 @@ function OperatorBookingPage() {
     setProcessing(true)
 
     try {
-      const token = localStorage.getItem('token')
-      
       // First, check if customer already exists by phone number
       let existingCustomerId = null
       try {
-        const searchResponse = await fetch(`${API_BASE_URL}/operators/customers/phone/${customerDetails.phone}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        const searchData = await apiFetch(`/operators/customers/phone/${encodeURIComponent(customerDetails.phone)}`)
         
-        if (searchResponse.ok) {
-          const searchData = await searchResponse.json()
-          if (searchData.customer) {
-            existingCustomerId = searchData.customer.custID
-            console.log('✅ Existing customer found:', existingCustomerId)
-          }
+        if (searchData.customer) {
+          existingCustomerId = searchData.customer.custID
+          console.log('✅ Existing customer found:', existingCustomerId)
         }
       } catch (searchError) {
         console.log('⚠️ Customer search error:', searchError)
@@ -294,21 +268,11 @@ function OperatorBookingPage() {
       
       console.log('📝 Creating operator booking:', bookingData)
 
-      const response = await fetch(`${API_BASE_URL}/operators/bookings`, {
+      // Using apiFetch to create booking
+      const result = await apiFetch('/operators/bookings', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(bookingData)
       })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to create booking')
-      }
-
-      const result = await response.json()
       
       console.log('✅ Booking created:', result)
       
@@ -350,19 +314,22 @@ function OperatorBookingPage() {
     }
     
     try {
-      const token = localStorage.getItem('token')
-      
       const smsData = {
         phone: customerDetails.phone,
         message: `EasyRide: Your booking from ${selectedRoute?.origin} to ${selectedRoute?.destination} on ${new Date(selectedSchedule.departureTime).toLocaleString()} (Seat${selectedSeats.length > 1 ? 's' : ''} ${selectedSeats.join(', ')}) is confirmed. Total: KSh ${calculateTotal()}. Thank you!`
       }
       
-      console.log('📱 SMS would be sent:', smsData)
+      // Using apiFetch to send SMS
+      await apiFetch('/notifications/sms', {
+        method: 'POST',
+        body: JSON.stringify(smsData)
+      })
+      
       alert(`SMS sent to ${customerDetails.phone}`)
       
     } catch (error) {
       console.error('SMS error:', error)
-      alert('Failed to send SMS')
+      alert('Failed to send SMS: ' + error.message)
     }
   }
 

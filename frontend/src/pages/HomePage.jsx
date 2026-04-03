@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Hero from '../components/Hero'
+import apiFetch from '../utils/api'
 
 // HomePage - main dashboard after login
 function HomePage() {
@@ -13,13 +14,32 @@ function HomePage() {
     date: ''
   })
 
-  // Mock data for popular routes - would come from API in real app
-  const popularRoutes = [
-    { id: 1, from: 'Nairobi', to: 'Mombasa', duration: '8 hours', price: '1,200' },
-    { id: 2, from: 'Nairobi', to: 'Kisumu', duration: '6 hours', price: '800' },
-    { id: 3, from: 'Nairobi', to: 'Nakuru', duration: '3 hours', price: '500' },
-    { id: 4, from: 'Mombasa', to: 'Nakuru', duration: '10 hours', price: '1,500' },
-  ]
+  // State for routes from API
+  const [popularRoutes, setPopularRoutes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Fetch popular routes from API on component mount
+  useEffect(() => {
+    fetchPopularRoutes()
+  }, [])
+
+  const fetchPopularRoutes = async () => {
+    try {
+      setLoading(true)
+      // Using apiFetch to get popular routes from backend
+      const data = await apiFetch('/routes/popular')
+      setPopularRoutes(data.routes || [])
+      setError(null)
+    } catch (err) {
+      console.error('Error fetching popular routes:', err)
+      setError(err.message || 'Failed to load routes')
+      // Fallback to empty array if API fails
+      setPopularRoutes([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Handle changes in search input fields
   const handleSearchChange = (e) => {
@@ -115,35 +135,58 @@ function HomePage() {
       <div style={styles.section}>
         <div className="container">
           <h2 style={styles.sectionTitle}>Popular Routes</h2>
+          
+          {/* Loading state */}
+          {loading && (
+            <div style={styles.loadingContainer}>
+              <div style={styles.loadingText}>Loading popular routes...</div>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div style={styles.errorContainer}>
+              <div style={styles.errorText}>Error: {error}</div>
+            </div>
+          )}
+
           {/* Grid of popular route cards */}
-          <div style={styles.routesGrid}>
-            {/* Map through popularRoutes array to create cards */}
-            {popularRoutes.map((route) => (
-              <div 
-                key={route.id}
-                style={styles.routeCard}
-                onClick={() => handleRouteClick(route)}
-              >
-                {/* Route header with origin, destination and duration */}
-                <div style={styles.routeHeader}>
-                  <h3 style={styles.routeTitle}>
-                    {route.from} → {route.to}
-                  </h3>
-                  <span style={styles.duration}>{route.duration}</span>
-                </div>
-                {/* Route footer with price and book button */}
-                <div style={styles.routeFooter}>
-                  <div style={styles.price}>
-                    <span style={styles.priceLabel}>From</span>
-                    <span style={styles.priceValue}>KSh {route.price}</span>
+          {!loading && !error && (
+            <div style={styles.routesGrid}>
+              {/* Map through popularRoutes array to create cards */}
+              {popularRoutes.length > 0 ? (
+                popularRoutes.map((route) => (
+                  <div 
+                    key={route.id}
+                    style={styles.routeCard}
+                    onClick={() => handleRouteClick(route)}
+                  >
+                    {/* Route header with origin, destination and duration */}
+                    <div style={styles.routeHeader}>
+                      <h3 style={styles.routeTitle}>
+                        {route.from} → {route.to}
+                      </h3>
+                      <span style={styles.duration}>{route.duration || 'N/A'}</span>
+                    </div>
+                    {/* Route footer with price and book button */}
+                    <div style={styles.routeFooter}>
+                      <div style={styles.price}>
+                        <span style={styles.priceLabel}>From</span>
+                        <span style={styles.priceValue}>KSh {route.price}</span>
+                      </div>
+                      <button style={styles.bookButton}>
+                        Book Now
+                      </button>
+                    </div>
                   </div>
-                  <button style={styles.bookButton}>
-                    Book Now
-                  </button>
+                ))
+              ) : (
+                <div style={styles.noRoutesMessage}>
+                  No popular routes available at the moment.
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -271,6 +314,31 @@ const styles = {
     marginBottom: '40px',
     color: '#78350f',
   },
+  // Loading container
+  loadingContainer: {
+    textAlign: 'center',
+    padding: '40px',
+  },
+  loadingText: {
+    fontSize: '18px',
+    color: '#92400e',
+  },
+  // Error container
+  errorContainer: {
+    textAlign: 'center',
+    padding: '40px',
+  },
+  errorText: {
+    fontSize: '18px',
+    color: '#dc2626',
+  },
+  // No routes message
+  noRoutesMessage: {
+    textAlign: 'center',
+    padding: '40px',
+    color: '#92400e',
+    fontSize: '16px',
+  },
   // Grid layout for popular routes
   routesGrid: {
     display: 'grid',
@@ -290,7 +358,6 @@ const styles = {
     transition: 'transform 0.3s, box-shadow 0.3s',
     border: '1px solid #fed7aa',
   },
-
   // Route header container
   routeHeader: {
     marginBottom: '20px',
@@ -340,7 +407,6 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s',
   },
-
   // How it works section
   howItWorks: {
     backgroundColor: 'white',

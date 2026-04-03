@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+import apiFetch from '../utils/api'
 
 function OperatorBookingsPage() {
   const navigate = useNavigate()
@@ -53,17 +51,8 @@ function OperatorBookingsPage() {
     setError(null)
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/operators/bookings`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookings')
-      }
-      
-      const data = await response.json()
+      // Using apiFetch to get all bookings
+      const data = await apiFetch('/operators/bookings')
       setBookings(data.bookings || [])
       
     } catch (error) {
@@ -82,21 +71,11 @@ function OperatorBookingsPage() {
     setActionLoading(`${bookingId}_status`)
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/operators/bookings/${bookingId}/status`, {
+      // Using apiFetch to update booking status
+      await apiFetch(`/operators/bookings/${bookingId}/status`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ status: newStatus })
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to update status')
-      }
       
       await fetchAllBookings()
       alert(`✅ Booking status updated to ${newStatus}`)
@@ -128,20 +107,10 @@ function OperatorBookingsPage() {
     setActionLoading(`${bookingId}_cancel`)
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/operators/bookings/${bookingId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      // Using apiFetch to cancel booking
+      await apiFetch(`/operators/bookings/${bookingId}/cancel`, {
+        method: 'POST'
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to cancel booking')
-      }
       
       await fetchAllBookings()
       alert('✅ Booking cancelled successfully')

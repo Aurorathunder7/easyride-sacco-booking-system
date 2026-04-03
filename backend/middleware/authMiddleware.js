@@ -6,6 +6,9 @@ const protect = async (req, res, next) => {
 
     console.log('🔐 Auth Middleware - Checking authorization');
 
+    // Add ngrok header to response to bypass warning
+    res.setHeader('ngrok-skip-browser-warning', 'true');
+
     // Check for token in headers
     if (req.headers.authorization?.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
@@ -68,6 +71,11 @@ const protect = async (req, res, next) => {
 
             console.log('✅ User found in database:', rows[0].email, 'Role:', rows[0].role);
             req.user = rows[0];
+            
+            // Add CORS headers to the response
+            res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            
             next();
         } catch (dbError) {
             console.error('❌ Database query error:', dbError.message);

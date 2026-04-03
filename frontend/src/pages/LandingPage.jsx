@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 function LandingPage() {
   const navigate = useNavigate()
+  
   return (
     <div style={styles.container}>
       <div style={styles.hero}>
@@ -74,12 +75,24 @@ function LandingPage() {
               <button 
                 style={styles.loginButton}
                 onClick={() => navigate('/login')}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
               >
                 🔐 Login to System
               </button>
               <button 
                 style={styles.registerButton}
                 onClick={() => navigate('/register')}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
               >
                 👤 Register as Passenger
               </button>
@@ -91,8 +104,14 @@ function LandingPage() {
                 <button 
                   style={styles.registerOperatorButton}
                   onClick={() => {
-                    alert('Operators are added by administrators. Please login as admin or contact SACCO management.');
-                    navigate('/login');
+                    alert('Operators are added by administrators. Please login as admin or contact SACCO management.')
+                    navigate('/login')
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
                   🏢 Operator Login
@@ -100,8 +119,14 @@ function LandingPage() {
                 <button 
                   style={styles.registerAdminButton}
                   onClick={() => {
-                    alert('Admin access is restricted. Please use existing admin credentials.');
-                    navigate('/login');
+                    alert('Admin access is restricted. Please use existing admin credentials.')
+                    navigate('/login')
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
                   ⚙️ Admin Login
@@ -132,6 +157,9 @@ function LandingPage() {
         <div style={styles.footerContent}>
           <p style={styles.footerText}>
             © 2025 EasyRide SACCO. All rights reserved.
+          </p>
+          <p style={styles.footerVersion}>
+            Version 2.0.0
           </p>
         </div>
       </footer>
@@ -281,7 +309,7 @@ const styles = {
     padding: '18px 40px',
     border: 'none',
     borderRadius: '12px',
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: 'bold',
     cursor: 'pointer',
     display: 'flex',
@@ -299,7 +327,7 @@ const styles = {
     padding: '18px 40px',
     border: 'none',
     borderRadius: '12px',
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: 'bold',
     cursor: 'pointer',
     display: 'flex',
@@ -339,7 +367,7 @@ const styles = {
     padding: '12px 25px',
     border: 'none',
     borderRadius: '10px',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
     display: 'flex',
@@ -354,7 +382,7 @@ const styles = {
     padding: '12px 25px',
     border: 'none',
     borderRadius: '10px',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
     display: 'flex',
@@ -403,9 +431,15 @@ const styles = {
   },
 
   footerText: {
-    fontSize: '16px',
-    marginBottom: '10px',
+    fontSize: '14px',
+    marginBottom: '5px',
     opacity: 0.8,
+  },
+
+  footerVersion: {
+    fontSize: '10px',
+    opacity: 0.5,
+    marginTop: '5px',
   },
 }
 
@@ -415,19 +449,6 @@ const addStyles = () => {
   style.textContent = `
     button:hover {
       opacity: 0.9;
-      transform: translateY(-2px);
-    }
-    .login-button:hover {
-      background: linear-gradient(135deg, #047857, #059669);
-    }
-    .register-button:hover {
-      background: linear-gradient(135deg, #d97706, #f59e0b);
-    }
-    .register-operator-button:hover {
-      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-    }
-    .register-admin-button:hover {
-      background: linear-gradient(135deg, #4f46e5, #6366f1);
     }
     .feature-card:hover {
       transform: translateY(-4px);
@@ -452,6 +473,29 @@ const addStyles = () => {
     }
     .feature-card, .stat-item {
       animation: slideIn 0.5s ease-out;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 24px;
+      }
+      .hero-subtitle {
+        font-size: 16px;
+      }
+      .login-button, .register-button {
+        font-size: 16px;
+        padding: 14px 30px;
+      }
+      .logo-text {
+        font-size: 28px;
+      }
+      .overview {
+        padding: 20px;
+      }
+      .feature-card {
+        padding: 15px;
+      }
     }
   `
   document.head.appendChild(style)

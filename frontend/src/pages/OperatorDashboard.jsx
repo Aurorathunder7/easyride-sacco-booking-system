@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+import apiFetch from '../utils/api'
 
 function OperatorDashboard() {
   const navigate = useNavigate()
@@ -66,28 +64,9 @@ function OperatorDashboard() {
       
       console.log('📊 Fetching operator dashboard...')
       
-      const response = await fetch(`${API_BASE_URL}/operators/dashboard`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      // Using apiFetch instead of direct fetch
+      const data = await apiFetch('/operators/dashboard')
       
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('user')
-          localStorage.removeItem('token')
-          navigate('/login')
-          throw new Error('Session expired')
-        }
-        if (response.status === 403) {
-          navigate('/')
-          throw new Error('Unauthorized access')
-        }
-        throw new Error('Failed to fetch dashboard data')
-      }
-      
-      const data = await response.json()
       console.log('✅ Dashboard data received:', data)
       
       setStats(data.stats || {})
@@ -96,6 +75,13 @@ function OperatorDashboard() {
     } catch (error) {
       console.error('❌ Error fetching dashboard:', error)
       setError(error.message)
+      
+      // Handle authentication errors
+      if (error.message.includes('Session expired') || error.message.includes('Unauthorized')) {
+        localStorage.removeItem('user')
+        localStorage.removeItem('token')
+        navigate('/login')
+      }
     } finally {
       setLoading(false)
     }
@@ -111,26 +97,22 @@ function OperatorDashboard() {
     setSearchResult(null)
     
     try {
-      const token = localStorage.getItem('token')
+      // Using apiFetch to search customer
+      const data = await apiFetch(`/customers/search?phone=${encodeURIComponent(searchPhone)}`)
       
-      const response = await fetch(`${API_BASE_URL}/customers/search?phone=${searchPhone}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          setSearchResult({ notFound: true })
-          return
-        }
-        throw new Error('Search failed')
+      if (data.customer) {
+        setSearchResult(data.customer)
+      } else if (data.notFound) {
+        setSearchResult({ notFound: true })
       }
-      
-      const data = await response.json()
-      setSearchResult(data.customer)
       
     } catch (error) {
       console.error('❌ Search error:', error)
-      alert('Failed to search customer')
+      if (error.message.includes('404')) {
+        setSearchResult({ notFound: true })
+      } else {
+        alert('Failed to search customer: ' + error.message)
+      }
     } finally {
       setSearching(false)
     }
@@ -436,8 +418,8 @@ function OperatorDashboard() {
                             `
                         }).join('')}
                     </tbody>
-                </table>`
-            )}
+                </table>
+            `)}
         </div>
         
         <div class="footer">
@@ -457,18 +439,9 @@ function OperatorDashboard() {
 
   const handleGenerateReport = async () => {
     try {
-      const token = localStorage.getItem('token')
+      // Using apiFetch to get report data
+      const data = await apiFetch('/operators/reports/daily')
       
-      const response = await fetch(`${API_BASE_URL}/operators/reports/daily`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to generate report')
-      }
-      
-      const data = await response.json()
       console.log('📊 Report data:', data)
       
       const reportHTML = generateReportHTML(data)
@@ -496,21 +469,11 @@ function OperatorDashboard() {
     setActionLoading(`${bookingId}_status`)
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+      // Using apiFetch to update booking status
+      await apiFetch(`/bookings/${bookingId}/status`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ status: newStatus })
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to update status')
-      }
       
       await fetchDashboardData()
       alert(`✅ Booking marked as ${newStatus} successfully`)
@@ -544,20 +507,10 @@ function OperatorDashboard() {
     setActionLoading(`${bookingId}_cancel`)
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await fetch(`${API_BASE_URL}/customers/bookings/${bookingId}/cancel`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      // Using apiFetch to cancel booking
+      await apiFetch(`/customers/bookings/${bookingId}/cancel`, {
+        method: 'PUT'
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to cancel booking')
-      }
       
       await fetchDashboardData()
       alert('✅ Booking cancelled successfully')
@@ -578,28 +531,23 @@ function OperatorDashboard() {
     setActionLoading(`${bookingId}_print`)
     
     try {
-      const token = localStorage.getItem('token')
-      
-      const bookingResponse = await fetch(`${API_BASE_URL}/customers/bookings/${bookingId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!bookingResponse.ok) {
-        throw new Error('Failed to fetch booking details')
-      }
-      
-      const bookingData = await bookingResponse.json()
+      // Using apiFetch to get booking details (JSON data)
+      const bookingData = await apiFetch(`/customers/bookings/${bookingId}`)
       const booking = bookingData.booking || bookingData
       
       const ticketHTML = generateTicketHTML(booking)
       
       const printWindow = window.open('', '_blank')
-      printWindow.document.write(ticketHTML)
-      printWindow.document.close()
+      if (printWindow) {
+        printWindow.document.write(ticketHTML)
+        printWindow.document.close()
+      } else {
+        alert('Please allow popups to print tickets')
+      }
       
     } catch (error) {
       console.error('❌ Ticket error:', error)
-      alert('Failed to generate ticket')
+      alert('Failed to generate ticket: ' + error.message)
     } finally {
       setActionLoading(null)
     }

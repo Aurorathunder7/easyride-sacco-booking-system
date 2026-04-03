@@ -1,47 +1,7 @@
 // src/pages/AdminPage.jsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
-// Helper function for API calls
-const apiFetch = async (url, options = {}) => {
-  const token = localStorage.getItem('token')
-  
-  const headers = {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers
-  }
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers
-    })
-
-    const text = await response.text()
-    
-    try {
-      const data = JSON.parse(text)
-      if (!response.ok) {
-        throw new Error(data.message || `Request failed with status ${response.status}`)
-      }
-      return data
-    } catch (parseError) {
-      if (response.status === 401) {
-        throw new Error('Not authorized. Please login again.')
-      }
-      throw new Error(`Server returned: ${text.substring(0, 100)}`)
-    }
-    
-  } catch (error) {
-    console.error('API fetch error:', error)
-    throw error
-  }
-}
+import apiFetch from '../utils/api'
 
 const AdminPage = () => {
   const navigate = useNavigate()
@@ -147,13 +107,14 @@ const AdminPage = () => {
     setError(null)
     
     try {
+      // Using apiFetch for all admin endpoints
       const [operatorsData, routesData, vehiclesData, bookingsData, paymentsData, statsData] = await Promise.all([
-        apiFetch(`${API_BASE_URL}/admin/operators`).catch(() => ({ operators: [] })),
-        apiFetch(`${API_BASE_URL}/admin/routes`).catch(() => ({ routes: [] })),
-        apiFetch(`${API_BASE_URL}/admin/vehicles`).catch(() => ({ vehicles: [] })),
-        apiFetch(`${API_BASE_URL}/admin/bookings`).catch(() => ({ bookings: [] })),
-        apiFetch(`${API_BASE_URL}/admin/payments`).catch(() => ({ payments: [] })),
-        apiFetch(`${API_BASE_URL}/admin/stats`).catch(() => ({ stats: {} }))
+        apiFetch('/admin/operators').catch(() => ({ operators: [] })),
+        apiFetch('/admin/routes').catch(() => ({ routes: [] })),
+        apiFetch('/admin/vehicles').catch(() => ({ vehicles: [] })),
+        apiFetch('/admin/bookings').catch(() => ({ bookings: [] })),
+        apiFetch('/admin/payments').catch(() => ({ payments: [] })),
+        apiFetch('/admin/stats').catch(() => ({ stats: {} }))
       ])
       
       setOperators(operatorsData.operators || [])
@@ -180,12 +141,18 @@ const AdminPage = () => {
     }, 3000)
   }
 
-  // Report Generation Functions
+  // Report Generation Functions (using direct fetch for HTML responses)
   const handleDailyReport = async () => {
     try {
       const token = localStorage.getItem('token')
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      // Keep direct fetch for HTML report endpoints
       const response = await fetch(`${API_BASE_URL}/admin/reports/daily?date=${reportDate}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
       })
       
       if (!response.ok) {
@@ -210,8 +177,13 @@ const AdminPage = () => {
   const handleWeeklyReport = async () => {
     try {
       const token = localStorage.getItem('token')
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
       const response = await fetch(`${API_BASE_URL}/admin/reports/weekly?startDate=${weekStartDate}&endDate=${weekEndDate}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
       })
       
       if (!response.ok) {
@@ -236,11 +208,16 @@ const AdminPage = () => {
   const handleMonthlyReport = async () => {
     try {
       const token = localStorage.getItem('token')
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
       const currentDate = new Date()
       const month = currentDate.getMonth() + 1
       const year = currentDate.getFullYear()
       const response = await fetch(`${API_BASE_URL}/admin/reports/monthly?month=${month}&year=${year}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
       })
       
       if (!response.ok) {
@@ -267,7 +244,7 @@ const AdminPage = () => {
     setSubmitting(true)
     
     try {
-      await apiFetch(`${API_BASE_URL}/admin/operators`, {
+      await apiFetch('/admin/operators', {
         method: 'POST',
         body: JSON.stringify(newOperator)
       })
@@ -295,7 +272,7 @@ const AdminPage = () => {
     setSubmitting(true)
     
     try {
-      await apiFetch(`${API_BASE_URL}/admin/routes`, {
+      await apiFetch('/admin/routes', {
         method: 'POST',
         body: JSON.stringify(newRoute)
       })
@@ -322,7 +299,7 @@ const AdminPage = () => {
     setSubmitting(true)
     
     try {
-      await apiFetch(`${API_BASE_URL}/admin/vehicles`, {
+      await apiFetch('/admin/vehicles', {
         method: 'POST',
         body: JSON.stringify(newVehicle)
       })
@@ -348,7 +325,7 @@ const AdminPage = () => {
     if (!window.confirm('Are you sure you want to delete this operator?')) return
     
     try {
-      await apiFetch(`${API_BASE_URL}/admin/operators/${id}`, { method: 'DELETE' })
+      await apiFetch(`/admin/operators/${id}`, { method: 'DELETE' })
       await fetchAllData()
       showToast('Operator deleted successfully', 'success')
     } catch (error) {
@@ -360,7 +337,7 @@ const AdminPage = () => {
     if (!window.confirm('Are you sure you want to delete this route?')) return
     
     try {
-      await apiFetch(`${API_BASE_URL}/admin/routes/${id}`, { method: 'DELETE' })
+      await apiFetch(`/admin/routes/${id}`, { method: 'DELETE' })
       await fetchAllData()
       showToast('Route deleted successfully', 'success')
     } catch (error) {
@@ -372,7 +349,7 @@ const AdminPage = () => {
     if (!window.confirm('Are you sure you want to delete this vehicle?')) return
     
     try {
-      await apiFetch(`${API_BASE_URL}/admin/vehicles/${id}`, { method: 'DELETE' })
+      await apiFetch(`/admin/vehicles/${id}`, { method: 'DELETE' })
       await fetchAllData()
       showToast('Vehicle deleted successfully', 'success')
     } catch (error) {
@@ -382,7 +359,7 @@ const AdminPage = () => {
 
   const handleToggleVehicleStatus = async (id, currentStatus) => {
     try {
-      await apiFetch(`${API_BASE_URL}/admin/vehicles/${id}/toggle-status`, { method: 'PATCH' })
+      await apiFetch(`/admin/vehicles/${id}/toggle-status`, { method: 'PATCH' })
       await fetchAllData()
       const newStatus = currentStatus === 'active' ? 'deactivated' : 'activated'
       showToast(`Vehicle ${newStatus} successfully`, 'success')

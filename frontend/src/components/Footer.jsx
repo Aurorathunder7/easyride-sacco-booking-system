@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 // Footer
 function Footer() {
@@ -22,11 +23,12 @@ function Footer() {
             {/* Quick Links column */}
             <div style={styles.linksColumn}>
               <h4 style={styles.linksTitle}>Quick Links</h4>
-              {/* Navigation links */}
-              <a href="/" style={styles.link}>Home</a>
-              <a href="/book" style={styles.link}>Book Now</a>
-              <a href="/my-bookings" style={styles.link}>My Bookings</a>
-              <a href="/login" style={styles.link}>Login</a>
+              {/* Navigation links - using React Router Link for SPA navigation */}
+              <Link to="/" style={styles.link}>Home</Link>
+              <Link to="/book" style={styles.link}>Book Now</Link>
+              <Link to="/my-bookings" style={styles.link}>My Bookings</Link>
+              <Link to="/login" style={styles.link}>Login</Link>
+              <Link to="/register" style={styles.link}>Register</Link>
             </div>
             
             {/* Contact Information */}
@@ -36,15 +38,55 @@ function Footer() {
               <p style={styles.contactInfo}>📞 0797338021</p>
               {/* Email address */}
               <p style={styles.contactInfo}>📧 antomure122@gmail.com</p>
-              {/* Location with */}
+              {/* Location */}
               <p style={styles.contactInfo}>📍 Nairobi, Kenya</p>
+              {/* Working Hours */}
+              <p style={styles.contactInfo}>🕒 Mon-Sun: 6:00 AM - 10:00 PM</p>
+            </div>
+
+            {/* Social Media Links */}
+            <div style={styles.linksColumn}>
+              <h4 style={styles.linksTitle}>Follow Us</h4>
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={styles.socialLink}
+              >
+                📘 Facebook
+              </a>
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={styles.socialLink}
+              >
+                🐦 Twitter
+              </a>
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={styles.socialLink}
+              >
+                📷 Instagram
+              </a>
+              <a 
+                href="https://whatsapp.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={styles.socialLink}
+              >
+                💬 WhatsApp
+              </a>
             </div>
           </div>
         </div>
         
         {/* Copyright */}
         <div style={styles.copyright}>
-          <p>© 2024 EasyRide SACCO. All rights reserved.</p>
+          <p>© 2025 EasyRide SACCO. All rights reserved.</p>
+          <p style={styles.version}>Version 2.0.0</p>
         </div>
       </div>
     </footer>
@@ -79,6 +121,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    textAlign: 'center',
   },
   // Bus logo style
   logo: {
@@ -90,53 +133,105 @@ const styles = {
     fontSize: '24px',
     fontWeight: 'bold',
     marginBottom: '15px',
+    background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   },
   // Tagline/description text
   tagline: {
     fontSize: '14px',
     opacity: 0.8,
     lineHeight: 1.6,
+    maxWidth: '400px',
   },
   // Links section container
   linksSection: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
     gap: '30px',
-    alignItems: 'center',
+    alignItems: 'start',
     justifyContent: 'center',
   },
   // Individual link column
   linksColumn: {
     display: 'flex',
     flexDirection: 'column', // Stack links vertically
+    alignItems: 'flex-start',
   },
   // Column title (Quick Links, Contact Us)
   linksTitle: {
-    fontSize: '20px',
-    fontWeight: '800',
+    fontSize: '18px',
+    fontWeight: '700',
     marginBottom: '20px',
+    color: '#fbbf24',
   },
   // Navigation link style
   link: {
     color: 'white',
-    textDecoration: 'underline',
-    marginBottom: '14px',
+    textDecoration: 'none',
+    marginBottom: '12px',
     opacity: 0.8,
     fontSize: '14px',
+    transition: 'all 0.3s',
+    ':hover': {
+      opacity: 1,
+      transform: 'translateX(5px)',
+      color: '#fbbf24',
+    },
+  },
+  // Social media link style
+  socialLink: {
+    color: 'white',
+    textDecoration: 'none',
+    marginBottom: '12px',
+    opacity: 0.8,
+    fontSize: '14px',
+    transition: 'all 0.3s',
+    display: 'inline-block',
   },
   // Contact information text
   contactInfo: {
     fontSize: '14px',
     marginBottom: '10px',
     opacity: 0.8,
+    lineHeight: 1.6,
   },
   // Copyright section
   copyright: {
     borderTop: '1px solid rgba(255,255,255,0.1)',
     paddingTop: '20px',
     textAlign: 'center',
-    fontSize: '14px',
+    fontSize: '12px',
     opacity: 0.7,
   },
+  version: {
+    fontSize: '10px',
+    marginTop: '5px',
+    opacity: 0.5,
+  },
 }
+
+// Add hover styles
+const styleSheet = document.createElement('style')
+styleSheet.textContent = `
+  a:hover {
+    opacity: 1 !important;
+    transform: translateX(5px);
+    color: #fbbf24 !important;
+  }
+  @media (max-width: 768px) {
+    footer .links-section {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+    footer .links-column {
+      align-items: center;
+    }
+    footer .links-column a {
+      text-align: center;
+    }
+  }
+`
+document.head.appendChild(styleSheet)
+
 export default Footer

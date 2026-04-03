@@ -1,6 +1,7 @@
 // src/pages/RegisterPage.jsx
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import apiFetch from '../utils/api'  // Import the apiFetch helper
 
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -153,30 +154,11 @@ const RegisterPage = () => {
         password: customer.password
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      // Use apiFetch instead of direct fetch
+      const data = await apiFetch('/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
-        },
-        body: JSON.stringify(registrationData),
+        body: JSON.stringify(registrationData)
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          if (data.message?.includes('email already exists')) {
-            throw new Error('This email is already registered. Please use a different email or login.')
-          } else if (data.message?.includes('phone number already exists')) {
-            throw new Error('This phone number is already registered. Please use a different number or login.')
-          } else {
-            throw new Error(data.message || 'Registration failed. Please check your information.')
-          }
-        } else {
-          throw new Error(data.message || 'Server error. Please try again later.')
-        }
-      }
 
       localStorage.setItem('registeredEmail', registrationData.email)
       alert('✅ Registration successful! Please login with your credentials.')
@@ -184,7 +166,15 @@ const RegisterPage = () => {
       
     } catch (error) {
       console.error('❌ Registration error:', error)
-      setServerError(error.message || 'Registration failed. Please try again.')
+      
+      // Handle specific error messages
+      if (error.message?.includes('email already exists')) {
+        setServerError('This email is already registered. Please use a different email or login.')
+      } else if (error.message?.includes('phone number already exists')) {
+        setServerError('This phone number is already registered. Please use a different number or login.')
+      } else {
+        setServerError(error.message || 'Registration failed. Please try again.')
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setIsLoading(false)

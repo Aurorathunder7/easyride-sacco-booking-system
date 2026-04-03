@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import apiFetch from '../utils/api'  // Import the apiFetch helper
 
 // API Configuration - Uses environment variable or falls back to localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -92,27 +93,11 @@ function LoginPage() {
 
       console.log(`🔐 Attempting login as ${userType}:`, loginData.email)
 
-      // 🔴 BACKEND API CALL
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      // Use apiFetch instead of direct fetch
+      const data = await apiFetch('/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
+        body: JSON.stringify(loginData)
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        // Handle specific error messages
-        if (response.status === 401) {
-          throw new Error('Invalid email/phone or password')
-        } else if (response.status === 400) {
-          throw new Error(data.message || 'Invalid request')
-        } else {
-          throw new Error(data.message || 'Login failed. Please try again.')
-        }
-      }
 
       // Login successful!
       console.log('✅ Login successful:', data)

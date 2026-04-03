@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SeatMap from '../components/SeatMap'
+import apiFetch from '../utils/api'  // Import the apiFetch helper
 
-// API Configuration
+// API Configuration - Keep for fallback, but we'll use apiFetch
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 function BookingPage() {
@@ -154,16 +155,12 @@ function BookingPage() {
         return
       }
       
-      const response = await fetch(`${API_BASE_URL}/bookings/routes`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) throw new Error('Failed to fetch routes')
-      
-      const data = await response.json()
+      // Use apiFetch instead of direct fetch
+      const data = await apiFetch('/bookings/routes')
       setRoutes(data.routes || [])
       
     } catch (error) {
+      console.error('Fetch error:', error)
       setError(error.message)
     } finally {
       setLoading(false)
@@ -174,14 +171,13 @@ function BookingPage() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
       
-      const response = await fetch(`${API_BASE_URL}/bookings/schedules?routeId=${routeId}&date=${date}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) throw new Error('Failed to fetch schedules')
-      
-      const data = await response.json()
+      // Use apiFetch instead of direct fetch
+      const data = await apiFetch(`/bookings/schedules?routeId=${routeId}&date=${date}`)
       
       // Filter out schedules that have already passed for today
       let availableSchedules = data.schedules || []
@@ -200,6 +196,7 @@ function BookingPage() {
       setSelectedSchedule(null)
       
     } catch (error) {
+      console.error('Fetch schedules error:', error)
       setError(error.message)
     } finally {
       setLoading(false)
@@ -209,19 +206,16 @@ function BookingPage() {
   const fetchSeatAvailability = async (schedule) => {
     try {
       const token = localStorage.getItem('token')
-      const travelDate = schedule.departureTime.split('T')[0]
-      
-      const url = `${API_BASE_URL}/bookings/seats/availability?vehicleId=${schedule.vehicleID}&date=${travelDate}`
-      
-      const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch seat availability')
+      if (!token) {
+        navigate('/login')
+        return
       }
       
-      const data = await response.json()
+      const travelDate = schedule.departureTime.split('T')[0]
+      const url = `/bookings/seats/availability?vehicleId=${schedule.vehicleID}&date=${travelDate}`
+      
+      // Use apiFetch instead of direct fetch
+      const data = await apiFetch(url)
       setAvailableSeats(data.seats || [])
       setSeats(data.seats || [])
       
@@ -243,17 +237,14 @@ function BookingPage() {
       
       try {
         const token = localStorage.getItem('token')
-        const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (!response.ok) {
-          console.log(`⚠️ Failed to fetch booking status: ${response.status}`);
-          return;
+        if (!token) {
+          clearInterval(interval)
+          navigate('/login')
+          return
         }
         
-        const data = await response.json()
-        console.log(`📥 Booking status response:`, data);
+        // Use apiFetch instead of direct fetch
+        const data = await apiFetch(`/bookings/${bookingId}`)
         
         // Check different possible status locations
         const isPaid = data.booking?.paymentStatus === 'paid' || 
@@ -340,6 +331,10 @@ function BookingPage() {
 
     try {
       const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
       
       // Step 1: Create the booking
       const bookingData = {
@@ -357,20 +352,11 @@ function BookingPage() {
         paymentMethod: 'mpesa'
       }
 
-      const bookingResponse = await fetch(`${API_BASE_URL}/bookings`, {
+      // Use apiFetch instead of direct fetch
+      const bookingResult = await apiFetch('/bookings', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(bookingData)
       })
-
-      const bookingResult = await bookingResponse.json()
-
-      if (!bookingResponse.ok) {
-        throw new Error(bookingResult.message || 'Failed to create booking')
-      }
 
       const bookingId = bookingResult.booking?.id
       const bookingRef = bookingResult.booking?.reference || `ER${bookingId}`
@@ -388,20 +374,11 @@ function BookingPage() {
         accountReference: bookingRef
       }
 
-      const paymentResponse = await fetch(`${API_BASE_URL}/mpesa/stkpush`, {
+      // Use apiFetch instead of direct fetch
+      const paymentResult = await apiFetch('/mpesa/stkpush', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(paymentData)
       })
-
-      const paymentResult = await paymentResponse.json()
-
-      if (!paymentResponse.ok) {
-        throw new Error(paymentResult.message || 'Failed to initiate payment')
-      }
 
       // Payment initiated successfully
       console.log(`💰 Payment initiated, CheckoutRequestID: ${paymentResult.checkoutRequestID}`);
@@ -520,6 +497,9 @@ function BookingPage() {
     )
   }
 
+  // Rest of the return JSX remains exactly the same...
+  // (The JSX part doesn't need changes, just the fetch calls above)
+  
   return (
     <div style={styles.container}>
       {/* Header */}

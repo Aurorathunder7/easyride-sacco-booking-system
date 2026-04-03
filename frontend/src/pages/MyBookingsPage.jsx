@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import apiFetch from '../utils/api'  // Import the apiFetch helper
 
-// API Configuration
+// API Configuration (keep for fallback but will use apiFetch)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 function MyBookingsPage() {
@@ -45,27 +46,9 @@ function MyBookingsPage() {
       
       console.log('📋 Fetching customer bookings from /bookings/customer...')
       
-      // FIX: Use correct endpoint - /bookings/customer not /customers/bookings
-      const response = await fetch(`${API_BASE_URL}/bookings/customer`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      // Use apiFetch instead of direct fetch
+      const data = await apiFetch('/bookings/customer')
       
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('user')
-          localStorage.removeItem('token')
-          navigate('/login')
-          throw new Error('Session expired. Please login again.')
-        }
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || 'Failed to fetch bookings')
-      }
-      
-      const data = await response.json()
       console.log('✅ Bookings received:', data)
       
       const bookingsData = data.bookings || data.data || []
@@ -101,22 +84,16 @@ function MyBookingsPage() {
     
     try {
       const token = localStorage.getItem('token')
-      
-      // FIX: Use correct endpoint - /bookings/:id/cancel
-      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to cancel booking')
+      if (!token) {
+        navigate('/login')
+        return
       }
       
-      const result = await response.json()
+      // Use apiFetch instead of direct fetch
+      const result = await apiFetch(`/bookings/${bookingId}/cancel`, {
+        method: 'PUT'
+      })
+      
       console.log('✅ Booking cancelled:', result)
       
       // Refresh bookings list
@@ -131,7 +108,7 @@ function MyBookingsPage() {
     }
   }
 
-  // FIX: Updated handleViewTicket function
+  // Updated handleViewTicket function
   const handleViewTicket = (bookingId) => {
     try {
       const token = localStorage.getItem('token')
@@ -149,7 +126,7 @@ function MyBookingsPage() {
     }
   }
 
-  // FIX: Updated handleReprintTicket function
+  // Updated handleReprintTicket function
   const handleReprintTicket = async (bookingId) => {
     try {
       const token = localStorage.getItem('token')
@@ -158,10 +135,11 @@ function MyBookingsPage() {
         return
       }
       
-      // Use correct endpoint
+      // Use fetch for HTML response (apiFetch expects JSON)
       const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/ticket?token=${token}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
         }
       })
       

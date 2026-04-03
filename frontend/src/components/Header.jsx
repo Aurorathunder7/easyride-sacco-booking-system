@@ -27,11 +27,11 @@ function Header() {
     if (!user) return ''
     
     // Handle different role's name fields
-    if (isCustomer) return user.name || user.customerName || user.email
-    if (isOperator) return user.name || user.operatorName || user.email
-    if (isAdmin) return user.name || user.adminName || user.email
+    if (isCustomer) return user.name || user.customerName || user.email?.split('@')[0] || 'Customer'
+    if (isOperator) return user.name || user.operatorName || user.email?.split('@')[0] || 'Operator'
+    if (isAdmin) return user.name || user.adminName || user.email?.split('@')[0] || 'Admin'
     
-    return user.email || 'User'
+    return user.email?.split('@')[0] || 'User'
   }
 
   /**
@@ -111,7 +111,7 @@ function Header() {
                 
                 {/* User name and role badge */}
                 <div style={styles.userDetails}>
-                  <span style={styles.userName}>
+                  <span style={styles.userName} title={getDisplayName()}>
                     {getDisplayName()}
                   </span>
                   <span style={styles.userRole}>
@@ -164,6 +164,8 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '12px 0',
+    flexWrap: 'wrap',
+    gap: '10px',
   },
   logo: {
     display: 'flex',
@@ -175,9 +177,6 @@ const styles = {
     textDecoration: 'none',
     color: '#333',
     transition: 'opacity 0.3s',
-    ':hover': {
-      opacity: 0.8,
-    },
   },
   logoIcon: {
     fontSize: '28px',
@@ -197,6 +196,7 @@ const styles = {
     alignItems: 'center',
     margin: 0,
     padding: 0,
+    flexWrap: 'wrap',
   },
   link: {
     textDecoration: 'none',
@@ -206,10 +206,6 @@ const styles = {
     padding: '8px 12px',
     borderRadius: '6px',
     transition: 'all 0.3s',
-    ':hover': {
-      backgroundColor: '#f3f4f6',
-      color: '#3b82f6',
-    },
   },
   userSection: {
     display: 'flex',
@@ -268,10 +264,6 @@ const styles = {
     fontSize: '13px',
     border: '2px solid #3b82f6',
     transition: 'all 0.3s',
-    ':hover': {
-      backgroundColor: '#3b82f6',
-      color: 'white',
-    },
   },
   registerBtn: {
     backgroundColor: '#3b82f6',
@@ -283,10 +275,6 @@ const styles = {
     fontSize: '13px',
     border: '2px solid #3b82f6',
     transition: 'all 0.3s',
-    ':hover': {
-      backgroundColor: '#2563eb',
-      borderColor: '#2563eb',
-    },
   },
   logoutBtn: {
     backgroundColor: '#ef4444',
@@ -301,10 +289,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
-    ':hover': {
-      backgroundColor: '#dc2626',
-      transform: 'scale(1.05)',
-    },
   },
   logoutIcon: {
     fontSize: '14px',

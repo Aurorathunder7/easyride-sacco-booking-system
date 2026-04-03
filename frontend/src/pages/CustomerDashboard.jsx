@@ -1,9 +1,7 @@
 // src/pages/CustomerDashboard.jsx
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+import apiFetch from '../utils/api'
 
 const CustomerDashboard = () => {
   // ============================
@@ -51,7 +49,7 @@ const CustomerDashboard = () => {
       setUser(userData)
       
       // Fetch dashboard data
-      fetchDashboardData(token)
+      fetchDashboardData()
     } catch (error) {
       console.error('Error parsing user data:', error)
       navigate('/login')
@@ -64,35 +62,18 @@ const CustomerDashboard = () => {
   
   /**
    * Fetch customer's bookings from backend
-   * Endpoint: GET /api/customers/bookings
+   * Endpoint: GET /api/customers/dashboard
    */
-  const fetchDashboardData = async (token) => {
+  const fetchDashboardData = async () => {
     setIsLoading(true)
     setError(null)
     
     try {
       console.log('📊 Fetching customer dashboard data...')
       
-      const response = await fetch(`${API_BASE_URL}/customers/dashboard`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      // Using apiFetch to get dashboard data
+      const data = await apiFetch('/customers/dashboard')
       
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem('user')
-          localStorage.removeItem('token')
-          navigate('/login')
-          throw new Error('Session expired. Please login again.')
-        }
-        throw new Error('Failed to fetch dashboard data')
-      }
-      
-      const data = await response.json()
       console.log('✅ Dashboard data received:', data)
       
       // Update state with real data
@@ -109,6 +90,13 @@ const CustomerDashboard = () => {
     } catch (error) {
       console.error('❌ Error fetching dashboard:', error)
       setError(error.message)
+      
+      // Handle authentication errors
+      if (error.message.includes('Session expired') || error.message.includes('Not authorized')) {
+        localStorage.removeItem('user')
+        localStorage.removeItem('token')
+        navigate('/login')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -130,6 +118,7 @@ const CustomerDashboard = () => {
    * Format date to readable format
    */
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
     const options = { year: 'numeric', month: 'short', day: 'numeric' }
     return new Date(dateString).toLocaleDateString('en-KE', options)
   }
@@ -146,7 +135,7 @@ const CustomerDashboard = () => {
       'refunded': 'bg-purple-100 text-purple-800'
     }
     
-    return statusStyles[status.toLowerCase()] || 'bg-gray-100 text-gray-800'
+    return statusStyles[status?.toLowerCase()] || 'bg-gray-100 text-gray-800'
   }
 
   // ============================
@@ -196,7 +185,7 @@ const CustomerDashboard = () => {
         {/* Header with user name */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">
-            Welcome back, {user?.name || user?.customerName || 'Customer'}! 👋
+            Welcome back, {user?.name || user?.customerName || user?.fullName || 'Customer'}! 👋
           </h1>
           <p className="text-gray-600 mt-2">
             Here's what's happening with your bookings
@@ -365,13 +354,13 @@ const CustomerDashboard = () => {
                       </h3>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
-                          <span>📅</span> {formatDate(booking.travelDate || booking.date)}
+                          <span>📅</span> {formatDate(booking.travelDate || booking.date || booking.departureDate)}
                         </span>
                         <span className="flex items-center gap-1">
-                          <span>💺</span> Seat {booking.seatNumber || booking.seat}
+                          <span>💺</span> Seat {booking.seatNumber || booking.seat || booking.seats?.join(', ')}
                         </span>
                         <span className="flex items-center gap-1">
-                          <span>💰</span> {formatCurrency(booking.amount || booking.price)}
+                          <span>💰</span> {formatCurrency(booking.amount || booking.price || booking.totalAmount)}
                         </span>
                         {booking.bookingReference && (
                           <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -382,9 +371,9 @@ const CustomerDashboard = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(booking.status)}`}>
-                        {booking.status}
+                        {booking.status || 'pending'}
                       </span>
-                      {booking.status === 'pending' && (
+                      {(booking.status === 'pending' || booking.status === 'Pending') && (
                         <Link
                           to={`/payment/${booking.bookingID || booking.id}`}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
