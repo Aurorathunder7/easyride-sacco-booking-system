@@ -60,13 +60,18 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
   const getSeatStatus = (seat) => {
     if (seat === 'D') return 'driver'
     if (seat === 'E') return 'empty'
-    if (bookedSeats.includes(seat)) return 'booked'
+    
+    // Convert to string for comparison (handles numbers vs strings)
+    const seatStr = seat.toString()
+    const bookedSeatsStr = bookedSeats.map(s => s.toString())
+    
+    if (bookedSeatsStr.includes(seatStr)) return 'booked'
     if (selectedSeats.includes(seat)) return 'selected'
     return 'available'
   }
 
   const handleSeatClick = (seat) => {
-    if (typeof seat !== 'number' || bookedSeats.includes(seat)) return
+    if (typeof seat !== 'number' || getSeatStatus(seat) === 'booked') return
     
     if (selectedSeats.includes(seat)) {
       // Deselect seat
@@ -114,10 +119,10 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
       case 'booked':
         return {
           ...baseStyle,
-          backgroundColor: '#ef4444',
+          backgroundColor: '#ef4444',  // RED color
           color: 'white',
           cursor: 'not-allowed',
-          opacity: 0.6,
+          opacity: 0.7,
         }
       case 'selected':
         return {
@@ -133,15 +138,14 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
           backgroundColor: '#f3f4f6',
           color: '#374151',
           border: '2px solid #d1d5db',
-          ':hover': {
-            backgroundColor: '#e5e7eb',
-            borderColor: '#9ca3af',
-          }
         }
       default:
         return baseStyle
     }
   }
+
+  // Debug log to see what booked seats are being passed
+  console.log('🎫 SeatMap received bookedSeats:', bookedSeats)
 
   return (
     <div style={styles.container}>
@@ -157,7 +161,7 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
             <span>Selected</span>
           </div>
           <div style={styles.legendItem}>
-            <div style={{...styles.legendBox, backgroundColor: '#ef4444', opacity: 0.6}}></div>
+            <div style={{...styles.legendBox, backgroundColor: '#ef4444', opacity: 0.7}}></div>
             <span>Booked</span>
           </div>
           <div style={styles.legendItem}>
@@ -168,12 +172,9 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
       </div>
 
       <div style={styles.seatMap}>
-        {/* Top view representation */}
         <div style={styles.vehicleOutline}>
-          {/* Windshield */}
           <div style={styles.windshield}></div>
           
-          {/* Seat grid */}
           <div style={styles.grid}>
             {layout.map((row, rowIndex) => (
               <div key={rowIndex} style={styles.row}>
@@ -194,7 +195,6 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
             ))}
           </div>
           
-          {/* Rear bumper */}
           <div style={styles.rearBumper}></div>
         </div>
       </div>
@@ -204,6 +204,11 @@ function SeatMap({ capacity = 14, bookedSeats = [], selectedSeats = [], onSeatSe
           Selected: {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
           {maxSelectable > 1 && ` (Max: ${maxSelectable})`}
         </p>
+        {bookedSeats.length > 0 && (
+          <p style={{...styles.infoText, color: '#ef4444', marginTop: '5px'}}>
+            Booked seats: {bookedSeats.join(', ')}
+          </p>
+        )}
       </div>
     </div>
   )

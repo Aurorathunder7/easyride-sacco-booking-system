@@ -43,8 +43,6 @@ const corsOptions = {
             console.log('⚠️ CORS request from origin:', origin);
             // Allow all origins during development (remove in production)
             callback(null, true);
-            // For strict production, use:
-            // callback(new Error(`CORS blocked: ${origin} not allowed`));
         }
     },
     credentials: true,  // Allow cookies/auth headers
@@ -122,6 +120,69 @@ app.get('/api/test-cors', (req, res) => {
         method: req.method
     });
 });
+
+// ====================
+// SCHEDULE GENERATOR
+// ====================
+
+// Import schedule generator
+const { generateFutureSchedules, generateTodaySchedules } = require('./utils/scheduleGenerator');
+
+// Function to initialize schedules on server start
+async function initializeSchedules() {
+    try {
+        console.log('📅 Checking and generating schedules...');
+        
+        // First, generate schedules for today
+        const todayCount = await generateTodaySchedules();
+        console.log(`✅ Today: ${todayCount} schedules added`);
+        
+        // Then generate for next 14 days
+        const total = await generateFutureSchedules(14);
+        console.log(`✅ Schedule initialization complete: ${total} total schedules added`);
+        
+    } catch (error) {
+        console.error('❌ Failed to initialize schedules:', error.message);
+        // Don't exit the server, just log the error
+    }
+}
+
+// Run schedule initialization after database is ready
+setTimeout(() => {
+    initializeSchedules();
+}, 5000);
+
+// Optional: Start daily cron job for automatic schedule generation
+try {
+    // Check if node-cron is installed
+    const cron = require('node-cron');
+    const { generateSchedulesForDate } = require('./utils/scheduleGenerator');
+    
+    // Run every day at 12:01 AM
+    cron.schedule('1 0 * * *', async () => {
+        console.log('🕐 Running daily schedule generation...');
+        
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        await generateSchedulesForDate(tomorrowStr);
+        
+        // Also ensure schedules for the next 7 days exist
+        for (let i = 2; i <= 7; i++) {
+            const futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + i);
+            const dateStr = futureDate.toISOString().split('T')[0];
+            await generateSchedulesForDate(dateStr);
+        }
+        
+        console.log('✅ Daily schedule generation complete');
+    });
+    
+    console.log('📅 Daily schedule job started - will run at 12:01 AM');
+} catch (error) {
+    console.log('⚠️ Daily schedule job not configured (node-cron not installed). Run: npm install node-cron');
+}
 
 // ====================
 // ERROR HANDLING

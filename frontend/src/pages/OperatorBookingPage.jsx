@@ -249,6 +249,7 @@ function OperatorBookingPage() {
       const bookingData = {
         routeId: selectedRoute.routeID,
         vehicleId: selectedSchedule.vehicleID,
+        scheduleId: selectedSchedule.scheduleID,
         seatNumbers: selectedSeats,
         travelDate: selectedSchedule.departureTime.split('T')[0],
         customerDetails: {
@@ -952,7 +953,7 @@ function OperatorBookingPage() {
               </div>
             )}
             
-            {/* Seat Selection */}
+            {/* Seat Selection - FIXED: Using bookedSeatsList from schedule */}
             {selectedSchedule && (
               <div style={styles.card}>
                 <div style={{...styles.cardHeader, background: 'linear-gradient(135deg, #10b981, #34d399)'}}>
@@ -964,7 +965,7 @@ function OperatorBookingPage() {
                 <div style={styles.cardBody}>
                   <SeatMap
                     capacity={selectedSchedule.capacity || 14}
-                    bookedSeats={selectedSchedule.bookedSeats || []}
+                    bookedSeats={selectedSchedule.bookedSeatsList || selectedSchedule.bookedSeats || []}
                     selectedSeats={selectedSeats}
                     onSeatSelect={setSelectedSeats}
                     maxSelectable={10}

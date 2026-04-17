@@ -340,6 +340,7 @@ function BookingPage() {
       const bookingData = {
         routeId: selectedRoute.routeID,
         vehicleId: selectedSchedule.vehicleID,
+        scheduleId: selectedSchedule.scheduleID,
         seatNumbers: selectedSeats,
         travelDate: selectedSchedule.departureTime.split('T')[0],
         passengers: selectedSeats.length,
@@ -497,9 +498,6 @@ function BookingPage() {
     )
   }
 
-  // Rest of the return JSX remains exactly the same...
-  // (The JSX part doesn't need changes, just the fetch calls above)
-  
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -732,7 +730,7 @@ function BookingPage() {
             </div>
           )}
 
-          {/* Seat Selection */}
+          {/* Seat Selection - FIXED: Using bookedSeatsList from schedule */}
           {selectedSchedule && (
             <div style={styles.card}>
               <div style={{...styles.cardHeader, background: 'linear-gradient(135deg, #10b981, #34d399)'}}>
@@ -745,7 +743,8 @@ function BookingPage() {
               <div style={styles.cardBody}>
                 <SeatMap
                   capacity={selectedSchedule.capacity || 14}
-                  bookedSeats={availableSeats.filter(s => !s.isAvailable).map(s => s.number)}
+                  // FIXED: Use bookedSeatsList from schedule instead of filtering availableSeats
+                  bookedSeats={selectedSchedule.bookedSeatsList || selectedSchedule.bookedSeats || []}
                   selectedSeats={selectedSeats}
                   onSeatSelect={setSelectedSeats}
                   maxSelectable={5}

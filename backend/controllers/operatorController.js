@@ -555,7 +555,7 @@ const getCustomerByPhone = async (req, res, next) => {
 };
 
 /**
- * @desc    Update booking status (with cash payment handling)
+ * @desc    Update booking status (FIXED - now sets status to 'completed' correctly)
  * @route   PUT /api/operators/bookings/:id/status
  * @access  Private (Operator only)
  */
@@ -563,6 +563,8 @@ const updateBookingStatus = async (req, res, next) => {
     try {
         const bookingId = req.params.id;
         const { status } = req.body;
+
+        console.log(`📝 Updating booking ${bookingId} to status: ${status}`);
 
         if (!status) {
             return res.status(400).json({ 
@@ -583,11 +585,11 @@ const updateBookingStatus = async (req, res, next) => {
             });
         }
 
-        // If marking as completed (for cash payments)
+        // Handle different status updates
         if (status === 'completed') {
-            // Update booking status to confirmed
+            // Mark booking as completed
             await pool.query(
-                `UPDATE bookings SET status = 'confirmed' WHERE bookingID = ?`,
+                `UPDATE bookings SET status = 'completed' WHERE bookingID = ?`,
                 [bookingId]
             );
             
@@ -597,28 +599,51 @@ const updateBookingStatus = async (req, res, next) => {
                 [bookingId]
             );
             
-            console.log(`✅ Booking ${bookingId} marked as completed and payment confirmed`);
-            
-            // Send confirmation email
-            const [customer] = await pool.query(
-                `SELECT email, customerName FROM customers WHERE custID = ?`,
-                [booking[0].custID]
-            );
-            
-            if (customer.length > 0 && customer[0].email) {
-                console.log(`📧 Payment confirmation email would be sent to ${customer[0].email}`);
-            }
+            console.log(`✅ Booking ${bookingId} marked as completed`);
             
             res.json({
                 success: true,
-                message: 'Payment confirmed and booking completed'
+                message: 'Booking marked as completed'
+            });
+        } else if (status === 'confirmed') {
+            // Mark booking as confirmed
+            await pool.query(
+                `UPDATE bookings SET status = 'confirmed' WHERE bookingID = ?`,
+                [bookingId]
+            );
+            
+            console.log(`✅ Booking ${bookingId} marked as confirmed`);
+            
+            res.json({
+                success: true,
+                message: 'Booking confirmed'
+            });
+        } else if (status === 'cancelled') {
+            // Cancel booking
+            await pool.query(
+                `UPDATE bookings SET status = 'cancelled' WHERE bookingID = ?`,
+                [bookingId]
+            );
+            
+            await pool.query(
+                `UPDATE payments SET status = 'cancelled' WHERE bookingID = ?`,
+                [bookingId]
+            );
+            
+            console.log(`✅ Booking ${bookingId} cancelled`);
+            
+            res.json({
+                success: true,
+                message: 'Booking cancelled'
             });
         } else {
-            // Regular status update
+            // Regular status update for other statuses
             await pool.query(
                 `UPDATE bookings SET status = ? WHERE bookingID = ?`,
                 [status, bookingId]
             );
+            
+            console.log(`✅ Booking ${bookingId} status updated to ${status}`);
             
             res.json({
                 success: true,
@@ -685,8 +710,6 @@ const cancelBooking = async (req, res, next) => {
 
         // Send cancellation email
         try {
-            const emailService = require('../services/emailService');
-            
             if (bookingDetails.length > 0) {
                 const booking = bookingDetails[0];
                 
